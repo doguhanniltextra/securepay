@@ -170,7 +170,7 @@
       "title": "Push Previous ID's To GitHub",
       "description": "Önceki ID'lerde oluşturduğumuz dosyaları conventional commits kullanarak, ID-based bir şekilde git add --> git commit -m 'conventional_commits(scope): ID's description with formal way' --> git push origin master şeklinde yapmanı istiyorum. Her ID kendi içerisinde yeni bir commit olmalı. Commitler ingilizce olmalı.",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         1,
         2,
@@ -178,7 +178,7 @@
         4,
         5
       ],
-      "output": "",
+      "output": "git commits created",
       "done_when": [
         "1,2,3,4,5 ID pushed to GitHub"
       ]
@@ -189,7 +189,7 @@
       "title": "Router — route tanımları",
       "description": "api-gateway/router.go oluştur. Bu dosya SADECE route tanımları içerir, iş mantığı içermez. Endpoint'ler: POST /api/v1/payments, GET /api/v1/payments/{id}, GET /api/v1/accounts/{id}/balance, GET /health. /api/v1/ endpoint'lerine JWT ve rate limit middleware zinciri uygula. Her endpoint HTTP isteği alır, grpc_clients.go'daki ilgili gRPC client ile downstream servise iletir, gRPC cevabını HTTP olarak döner. httputil.ReverseProxy kullanma. Handler stub olarak bırakma, gerçek gRPC çağrısı yap.",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2,
         3,
@@ -213,7 +213,7 @@
       "title": "main.go — API Gateway başlatma",
       "description": "api-gateway/main.go oluştur. SPIFFE X509Source başlat. gRPC client bağlantılarını kur. HTTP server'ı port 8080'de başlat. Router'ı kaydet. Graceful shutdown uygula: SIGTERM veya SIGINT sinyalinde açık bağlantıları kapat.",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         6
       ],
@@ -224,6 +224,26 @@
         "SPIFFE X509Source başlatılıyor",
         "Graceful shutdown var"
       ]
+    },
+    {
+      "id": 8,
+      "phase": "Initializing Dockerfile",
+      "title": "api-gateway İçin Dockerfile Oluşturma",
+      "description": "api-gateway için dockerfile oluştur. Sistem gereksinimlerine dikkat et. Oluşturduğun Dockerfile'yi build et. Build ettiğin Docker konteynırıın 8080 üzerinde çalıştığından emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "output": "api-gateway/apigateway.dockerfile",
+      "done_when": [
+        "apigateway dockerfile oluşturuldu.",
+        "apigateway dockerfile build edildi.",
+        "apigateway konteynırı çalıştırıldı.",
+        "apigateway 8080 portunda sağlıklı bir şekilde çalışıyor."
+      ]
+    },
+    {
+      "id": 9,
+      "phase": "GitHub Break",
+      "title": "Go to @penalty.md"
     }
   ]
 }
