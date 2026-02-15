@@ -248,6 +248,131 @@
       "done_when": [
         "ID 6, 7, 8 committed and pushed"
       ]
+    },
+    {
+      "id": 10,
+      "phase": "MIT License oluştur ve 'feat: mit license created' commit oluştur ve pushla.",
+      "status": "completed",
+      "output": "git commits pushed",
+      "done_when": [
+        "MIT License oluşturuldu."
+      ]
+    },
+    {
+      "id": 11,
+      "phase": "Initializing Dockerfile",
+      "title": "WSL için yeniden api-gateway Build etmek.",
+      "description": "api-gateway'i build etmiştik zaten ancak WSL'e taşınıyorum bundan dolayı WSL içerisinde bir kere daha build edilmesi gerekli.",
+      "priority": "high",
+      "status": "completed",
+      "output": "api-gateway/apigateway.dockerfile",
+      "done_when": [
+        "apigateway dockerfile oluşturuldu.",
+        "apigateway dockerfile build edildi.",
+        "apigateway konteynırı çalıştırıldı.",
+        "apigateway 8080 portunda sağlıklı bir şekilde çalışıyor."
+      ]
+    },
+    {
+      "id": 12,
+      "phase": "Deploy to Kubernetes",
+      "title": "Start minikube from deploy-k8s.sh",
+      "description": "example/deploy-8s.sh dosyasında bulunan Install Minikube yapısını yeni bir dosyaya taşımanı istiyorum. /hack/1-minikube-start.sh olarak adlandırman gerekli. WSL üzerinde Minikube çalıştığından emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "output": "hack/1-minikube-start.sh",
+      "done_when": [
+        "hack/1-minikube-start.sh dosyası oluşturuldu.",
+        "Minikube çalışıyor."
+      ]
+    },
+    {
+      "id": 13,
+      "phase": "Deploy to Kubernetes",
+      "title": "Installing Helm Step",
+      "description": "example/deploy-8s.sh dosyasında bulunan Step 2: Installing Helm yapısını yeni bir dosyaya taşımanı istiyorum. /hack/2-installing-helm.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "output": "/hack/2-installing-helm.sh",
+      "done_when": [
+        "/hack/2-installing-helm.sh dosyası oluşturuldu.",
+        "Helm çalışıyor."
+      ]
+    },
+    {
+      "id": 14,
+      "phase": "Deploy to Kubernetes",
+      "title": "Starting Minikube Step",
+      "description": "example/deploy-8s.sh dosyasında bulunan Step 3: Starting minikube yapısını yeni bir dosyaya taşımanı istiyorum. /hack/2-starting-minikube.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "output": "/hack/2-starting-minikube.sh",
+      "done_when": [
+        "/hack/2-starting-minikube.sh dosyası oluşturuldu.",
+        "minikube çalışıyor."
+      ]
+    },
+    {
+      "id": 15,
+      "phase": "Deploy to Kubernetes",
+      "title": "Installing SPIRE",
+      "description": "example/deploy-8s.sh dosyasında bulunan Step 4: Installing SPIRE yapısını yeni bir dosyaya taşımanı istiyorum. /hack/4-installing-spire.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "output": "/hack/4-installing-spire.sh ",
+      "done_when": [
+        "/hack/4-installing-spire.sh  dosyası oluşturuldu.",
+        "Spire çalışıyor."
+      ]
+    },
+    {
+      "id": 16,
+      "phase": "Deploy to Kubernetes",
+      "title": "REGISTER SPIRE",
+      "description": "example/deploy-8s.sh dosyasında bulunan Step 4.5: Register each service with SPIRE yapısını yeni bir dosyaya taşımanı istiyorum. /hack/5-register-spire.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol. /.ctx'de bulunan kurallara göre yapmaya dikkat et. Bu Register sadece api-gateway için geçerli, diğerleri için yapma.",
+      "priority": "high",
+      "status": "completed",
+      "output": "/hack/5-register-spire.sh ",
+      "done_when": [
+        "api-gateway için register oluşturuldu"
+      ]
+    },
+    {
+      "id": 17,
+      "phase": "Deploy to Kubernetes",
+      "title": "Create Deployment, Service, Serviceaccount, Configmap, Memory-related YAMLs for Api-Gateway",
+      "description": "/k8s dosyası içerisinde api-gateway adına title'da bulunan YAML file'lerini oluştur. SPIFFE/SPIRE için gereken kurulumu da orada yap api-gateway adına. Verilecek sertifikanın hangi soketten bağlanacağını vs. de söyle mutlaka YAML'da.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        16
+      ],
+      "output": "apigateway-deployment.yaml, apigateway-service.yaml, apigateway-serviceaccount.yaml, apigateway-configmap.yaml, apigateway-memory.yaml",
+      "done_when": [
+        "Api-gateway için, Deployment, Service, Serviceaccount, Configmap, Memory-related Yamls oluşturuldu."
+      ]
+    },
+    {
+      "id": 17.5,
+      "phase": "GITHUB BREAK",
+      "description": "Find github.md and apply it."
+    },
+    {
+      "id": 18,
+      "phase": "Deploy to Kubernetes",
+      "title": "Apply Yamls for apigateway",
+      "description": "/k8s dosyası içerisinde api-gateway adına bulunan YAML'ları apply'la ve çalıştığından emin ol. İçerisine girip SPIFFE sertifikası aldığına emin ol. Sistem çalışsın.",
+      "priority": "high",
+      "status": "pending",
+      "depends_on": [
+        16,
+        17
+      ],
+      "output": "",
+      "done_when": [
+        "api-gateway servisi Kubernetes içerisinde SPIFEE sertifikası aldı.",
+        "api-gateway /health endpointine cevap verdi."
+      ]
     }
   ]
 }
