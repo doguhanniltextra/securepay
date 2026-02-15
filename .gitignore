@@ -1,0 +1,29 @@
+
+# Project
+gemini.md
+tasks.json
+
+# Go
+*.exe
+*.test
+vendor/
+
+# Java
+target/
+*.class
+*.jar
+
+# Env
+.env
+.env.local
+*.pem
+*.key
+*.crt
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
