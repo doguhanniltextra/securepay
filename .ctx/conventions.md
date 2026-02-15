@@ -1,46 +1,46 @@
-# Kod Kuralları — SecurePay
+# Conventions — SecurePay
 
-## Go Servisleri (api-gateway, payment-service, account-service)
+## Go Services (api-gateway, payment-service, account-service)
 
-### Dosya İsimlendirme
+### File Naming
 - main.go          → entry point
 - router.go        → HTTP/gRPC routing
-- handler.go       → request handler'lar
-- validator.go     → validasyon logic
-- repository.go    → DB işlemleri
-- cache.go         → Redis işlemleri
+- handler.go       → request handlers
+- validator.go     → validation logic
+- repository.go    → DB operations
+- cache.go         → Redis operations
 - kafka.go         → Kafka producer/consumer
-- spiffe.go        → SPIFFE/SPIRE entegrasyonu
+- spiffe.go        → SPIFFE/SPIRE integration
 - telemetry.go     → OpenTelemetry setup
 - state.go         → state machine
 
-### Hata Yönetimi
-- Her fonksiyon (result, error) döner
-- Hata wrap: fmt.Errorf("context: %w", err)
-- panic YOK, her hata handle edilmeli
-- gRPC hataları: status.Errorf(codes.X, "mesaj")
+### Error Handling
+- Every function returns (result, error)
+- Error wrap: fmt.Errorf("context: %w", err)
+- NO panic, every error must be handled
+- gRPC errors: status.Errorf(codes.X, "message")
 
 ### Logging
-- log/slog paketi kullan (Go 1.21+)
-- console.log değil: slog.Info(), slog.Error()
-- Her log'da trace_id field'ı olmalı
+- Use log/slog package (Go 1.21+)
+- Not console.log: slog.Info(), slog.Error()
+- Every log must include trace_id field
 
 ### OpenTelemetry
-- Her servis telemetry.go dosyası içerir
+- Every service contains telemetry.go file
 - OTLP exporter → Jaeger (localhost:4317)
 - W3C TraceContext propagation
-- Span isimleri: "service.operation" formatında
+- Span names: "service.operation" format
 
-## Java Servisi (notification-service)
+## Java Service (notification-service)
 
-### Paket Yapısı
+### Package Structure
 com.securepay.notification/
   consumer/     → Kafka consumer
-  model/        → Data model'lar
-  config/       → Spring konfigürasyonu
-  telemetry/    → OTel konfigürasyonu
+  model/        → Data models
+  config/       → Spring configuration
+  telemetry/    → OTel configuration
 
-### Bağımlılıklar (pom.xml)
+### Dependencies (pom.xml)
 - spring-kafka
 - opentelemetry-spring-boot-starter
 - opentelemetry-exporter-otlp
@@ -48,7 +48,7 @@ com.securepay.notification/
 ## Kafka
 - Topic: payment.initiated
 - Consumer groups: account-service-group, notification-service-group
-- Event şeması:
+- Event schema:
   {
     "payment_id": "uuid",
     "from_account": "uuid",
@@ -61,18 +61,18 @@ com.securepay.notification/
 ## PostgreSQL
 - Schema: payments (Payment Service)
 - Schema: accounts (Account Service)
-- Her tablo: created_at, updated_at timestamp
-- Her tablo: version int (optimistic locking için)
-- UUID tip: uuid (PostgreSQL native)
+- Each table: created_at, updated_at timestamp
+- Each table: version int (for optimistic locking)
+- UUID type: uuid (PostgreSQL native)
 
-## Redis Key Formatları
-- Bakiye cache: balance:{account_id}
+## Redis Key Formats
+- Balance cache: balance:{account_id}
 - Idempotency: idempotency:{key}
-- TTL bakiye: 60 saniye
-- TTL idempotency: 24 saat (86400 saniye)
+- TTL balance: 60 seconds
+- TTL idempotency: 24 hours (86400 seconds)
 
 ## gRPC
-- Proto dosyaları: proto/ klasöründe
+- Proto files: in proto/ folder
 - Go generated: proto/gen/go/
 - Java generated: proto/gen/java/
 - Service naming: XxxService
@@ -81,6 +81,6 @@ com.securepay.notification/
 ## SPIFFE
 - Trust domain: securepay.dev
 - Socket path: /tmp/spire-agent/public/api.sock
-- SVID TTL: 1 saat
+- SVID TTL: 1 hour
 - Go SDK: github.com/spiffe/go-spiffe/v2
 - Java SDK: io.spiffe:java-spiffe-core

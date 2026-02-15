@@ -11,24 +11,24 @@
     {
       "id": 1,
       "phase": "Initializing API Gateway",
-      "title": "SPIFFE — SVID yükle ve mTLS credential üret",
-      "description": "api-gateway/spiffe.go oluştur. SPIFFE Go SDK kullanarak SPIRE Agent'tan X.509 SVID al. SPIFFE ID: spiffe://securepay.dev/api-gateway. Payment Service için mTLS client credential dönen fonksiyon yaz: SPIFFE ID spiffe://securepay.dev/payment-service olarak doğrulansın. Account Service için mTLS client credential dönen fonksiyon yaz: SPIFFE ID spiffe://securepay.dev/account-service olarak doğrulansın. Socket path: /tmp/spire-agent/public/api.sock.",
+      "title": "SPIFFE — Install SVID and Generate mTLS Credentials",
+      "description": "Create api-gateway/spiffe.go. Use SPIFFE Go SDK to fetch X.509 SVID from SPIRE Agent. SPIFFE ID: spiffe://securepay.dev/api-gateway. Write a function returning mTLS client credentials for Payment Service: verify SPIFFE ID spiffe://securepay.dev/payment-service. Write a function returning mTLS client credentials for Account Service: verify SPIFFE ID spiffe://securepay.dev/account-service. Socket path: /tmp/spire-agent/public/api.sock.",
       "priority": "high",
       "status": "completed",
       "output": "api-gateway/spiffe.go",
       "done_when": [
-        "spiffe.go dosyası oluştu",
-        "workloadapi.NewX509Source ile SVID alınıyor",
-        "Payment Service için mTLS credential fonksiyonu var",
-        "Account Service için mTLS credential fonksiyonu var",
-        "Her iki fonksiyon SPIFFE ID doğrulaması yapıyor"
+        "spiffe.go file created",
+        "SVID fetched using workloadapi.NewX509Source",
+        "mTLS credential function exists for Payment Service",
+        "mTLS credential function exists for Account Service",
+        "Both functions verify SPIFFE IDs"
       ]
     },
     {
       "id": 2,
       "phase": "Initializing API Gateway",
-      "title": "gRPC Client — Payment Service bağlantısı",
-      "description": "api-gateway/grpc_clients.go oluştur. spiffe.go'daki Payment Service mTLS credential fonksiyonunu kullan. grpc.Dial ile payment-service:50051'e bağlan. PaymentServiceClient dönen bir fonksiyon yaz. Statik credential veya insecure bağlantı kullanma.",
+      "title": "gRPC Client — Payment Service Connection",
+      "description": "Create api-gateway/grpc_clients.go. Use the Payment Service mTLS credential function from spiffe.go. Connect to payment-service:50051 using grpc.Dial. Write a function returning PaymentServiceClient. Do not use static credentials or insecure connections.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -36,17 +36,17 @@
       ],
       "output": "api-gateway/grpc_clients.go",
       "done_when": [
-        "grpc_clients.go dosyası oluştu",
-        "Payment Service için grpc.Dial var",
-        "mTLS credential spiffe.go'dan geliyor",
-        "insecure bağlantı yok"
+        "grpc_clients.go file created",
+        "grpc.Dial exists for Payment Service",
+        "mTLS credentials come from spiffe.go",
+        "No insecure connections"
       ]
     },
     {
       "id": 3,
       "phase": "Initializing API Gateway",
-      "title": "gRPC Client — Account Service bağlantısı",
-      "description": "api-gateway/grpc_clients.go dosyasına Account Service bağlantısını ekle. spiffe.go'daki Account Service mTLS credential fonksiyonunu kullan. grpc.Dial ile account-service:50051'e bağlan. AccountServiceClient dönen bir fonksiyon yaz.",
+      "title": "gRPC Client — Account Service Connection",
+      "description": "Add Account Service connection to api-gateway/grpc_clients.go. Use the Account Service mTLS credential function from spiffe.go. Connect to account-service:50051 using grpc.Dial. Write a function returning AccountServiceClient.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -54,16 +54,16 @@
       ],
       "output": "api-gateway/grpc_clients.go",
       "done_when": [
-        "Account Service için grpc.Dial var",
-        "mTLS credential spiffe.go'dan geliyor",
-        "AccountServiceClient dönen fonksiyon var"
+        "grpc.Dial exists for Account Service",
+        "mTLS credentials come from spiffe.go",
+        "Function returning AccountServiceClient exists"
       ]
     },
     {
       "id": 3.1,
       "phase": "Initializing API Gateway",
-      "title": "gRPC Proto tanımları",
-      "description": "proto/ klasörü oluştur. İki proto dosyası yaz. (1) proto/payment.proto: PaymentService için InitiatePayment ve GetPayment RPC tanımla. InitiatePaymentRequest: payment_id string, from_account string, to_account string, amount double, currency string, idempotency_key string. InitiatePaymentResponse: payment_id string, status enum (PENDING, COMPLETED, FAILED), message string. (2) proto/account.proto: AccountService için CheckBalance RPC tanımla. CheckBalanceRequest: account_id string. CheckBalanceResponse: account_id string, balance double, currency string. Her iki dosyada go_package tanımlı olsun.",
+      "title": "gRPC Proto Definitions",
+      "description": "Create proto/ folder. Write two proto files. (1) proto/payment.proto: Define InitiatePayment and GetPayment RPCs for PaymentService. InitiatePaymentRequest: payment_id string, from_account string, to_account string, amount double, currency string, idempotency_key string. InitiatePaymentResponse: payment_id string, status enum (PENDING, COMPLETED, FAILED), message string. (2) proto/account.proto: Define CheckBalance RPC for AccountService. CheckBalanceRequest: account_id string. CheckBalanceResponse: account_id string, balance double, currency string. Ensure go_package is defined in both files.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -73,20 +73,20 @@
       ],
       "output": "proto/payment.proto, proto/account.proto",
       "done_when": [
-        "proto/payment.proto oluştu",
-        "proto/account.proto oluştu",
-        "InitiatePayment RPC tanımlı",
-        "GetPayment RPC tanımlı",
-        "CheckBalance RPC tanımlı",
-        "go_package her iki dosyada tanımlı",
-        "protoc ile compile edilebilir"
+        "proto/payment.proto created",
+        "proto/account.proto created",
+        "InitiatePayment RPC defined",
+        "GetPayment RPC defined",
+        "CheckBalance RPC defined",
+        "go_package defined in both files",
+        "Compilable with protoc"
       ]
     },
     {
       "id": 3.2,
       "phase": "Initializing API Gateway",
-      "title": "gRPC Proto derleme",
-      "description": "Development ortamında `protoc` ve `protoc-gen-go` pluginlerinin kurulumu yap ve testini yap.",
+      "title": "gRPC Proto Compilation",
+      "description": "Install and test `protoc` and `protoc-gen-go` plugins in the development environment.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -103,42 +103,42 @@
     {
       "id": 3.3,
       "phase": "Initializing API Gateway",
-      "title": "gRPC Proto derleme ve main.go oluşturma.",
-      "description": "Basit bir main.go oluştur. grpc_clients.go için yeniden go build komutunu çalıştır. Proto'nun çalıştığından emin ol. Main.go sadece port açsın 8080 üzerinden. Bu port hard-coded olabilir. ",
+      "title": "gRPC Proto Compilation and main.go Creation",
+      "description": "Create a simple main.go. Run go build for grpc_clients.go again. Ensure Proto works. Main.go should only open port 8080. This port can be hard-coded.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
         1,
         2,
-        3,
+        3
       ],
       "output": "api-gateway/main.go",
       "done_when": [
-        "main.go oluşturuldu",
-        "Port 8080 olarak verildi.",
-        "Proto çalışıyor."
+        "main.go created",
+        "Port set to 8080",
+        "Proto works"
       ]
     },
     {
       "id": 4,
       "phase": "Initializing API Gateway",
-      "title": "Middleware — JWT doğrulama",
-      "description": "api-gateway/middleware/jwt.go oluştur. Authorization header'dan Bearer token al. Token'ı doğrula. Geçersiz token için 401 dön. Geçerli token için next handler'a geç. Sadece /api/v1/ prefix'li endpoint'lere uygulansın, /health hariç.",
+      "title": "Middleware — JWT Verification",
+      "description": "Create api-gateway/middleware/jwt.go. Extract Bearer token from Authorization header. Verify the token. Return 401 for invalid tokens. Proceed to next handler for valid tokens. Apply only to /api/v1/ prefixed endpoints, excluding /health.",
       "priority": "high",
       "status": "completed",
       "output": "api-gateway/middleware/jwt.go",
       "done_when": [
-        "jwt.go dosyası oluştu",
-        "Bearer token parse ediliyor",
-        "Geçersiz token 401 dönüyor",
-        "/health endpoint JWT'den muaf"
+        "jwt.go file created",
+        "Bearer token parsing implemented",
+        "Invalid token returns 401",
+        "/health endpoint excluded from JWT"
       ]
     },
     {
       "id": 4.1,
       "phase": "Initializing API Gateway",
-      "title": "Middleware — JWT doğrulama - Curl İstek Atımı",
-      "description": "api-gateway/middleware/jwt.go oluşturdun. /health endpoint'inin JWT tokeni istemediğinden emin ol. Diğerlerinin JWT istediğinden emin ol. Diğerlerine hard-coded olarak verilen JWT verildiğinde girildiğinde success verdiğinden emin ol.",
+      "title": "Middleware — JWT Verification - Curl Requests",
+      "description": "You created api-gateway/middleware/jwt.go. Ensure /health endpoint does not require JWT token. Ensure others require JWT. Ensure others return success when provided with a hard-coded JWT.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -146,29 +146,29 @@
       ],
       "output": "",
       "done_when": [
-        "Tüm Curl sonuçları başarılı sonuç verdi."
+        "All Curl results returned success."
       ]
     },
     {
       "id": 5,
       "phase": "Initializing API Gateway",
-      "title": "Middleware — Rate limiting",
-      "description": "api-gateway/middleware/ratelimit.go oluştur. Her IP için dakikada max 100 istek. Limit aşılınca 429 Too Many Requests dön. In-memory token bucket yeterli, Redis gerekmez. Basit tutulacak.",
+      "title": "Middleware — Rate Limiting",
+      "description": "Create api-gateway/middleware/ratelimit.go. Max 100 requests per minute per IP. Return 429 Too Many Requests when limit is exceeded. In-memory token bucket is sufficient, Redis not required. Keep it simple.",
       "priority": "high",
       "status": "completed",
       "output": "api-gateway/middleware/ratelimit.go",
       "done_when": [
-        "ratelimit.go dosyası oluştu",
-        "IP bazlı limit var",
-        "Dakikada max 100 istek",
-        "Limit aşılınca 429 dönüyor"
+        "ratelimit.go file created",
+        "IP-based limit implemented",
+        "Max 100 requests per minute",
+        "Returns 429 when limit exceeded"
       ]
     },
     {
       "id": 5.1,
       "phase": "GitHub Break",
-      "title": "Push Previous ID's To GitHub",
-      "description": "Önceki ID'lerde oluşturduğumuz dosyaları conventional commits kullanarak, ID-based bir şekilde git add --> git commit -m 'conventional_commits(scope): ID's description with formal way' --> git push origin master şeklinde yapmanı istiyorum. Her ID kendi içerisinde yeni bir commit olmalı. Commitler ingilizce olmalı.",
+      "title": "Push Previous IDs To GitHub",
+      "description": "I want you to commit the files created in previous IDs using conventional commits in an ID-based manner: git add --> git commit -m 'conventional_commits(scope): ID's description with formal way' --> git push origin master. Each ID should be a separate commit. Commits must be in English.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -180,14 +180,14 @@
       ],
       "output": "git commits created",
       "done_when": [
-        "1,2,3,4,5 ID pushed to GitHub"
+        "IDs 1, 2, 3, 4, 5 pushed to GitHub"
       ]
     },
     {
       "id": 6,
       "phase": "Initializing API Gateway",
-      "title": "Router — route tanımları",
-      "description": "api-gateway/router.go oluştur. Bu dosya SADECE route tanımları içerir, iş mantığı içermez. Endpoint'ler: POST /api/v1/payments, GET /api/v1/payments/{id}, GET /api/v1/accounts/{id}/balance, GET /health. /api/v1/ endpoint'lerine JWT ve rate limit middleware zinciri uygula. Her endpoint HTTP isteği alır, grpc_clients.go'daki ilgili gRPC client ile downstream servise iletir, gRPC cevabını HTTP olarak döner. httputil.ReverseProxy kullanma. Handler stub olarak bırakma, gerçek gRPC çağrısı yap.",
+      "title": "Router — Route Definitions",
+      "description": "Create api-gateway/router.go. This file should ONLY contain route definitions, no business logic. Endpoints: POST /api/v1/payments, GET /api/v1/payments/{id}, GET /api/v1/accounts/{id}/balance, GET /health. Apply JWT and rate limit middleware chain to /api/v1/ endpoints. Each endpoint receives HTTP request, forwards to respective downstream service via gRPC client in grpc_clients.go, and returns gRPC response as HTTP. Do not use httputil.ReverseProxy. Do not leave handler as stub, make real gRPC calls.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -198,20 +198,20 @@
       ],
       "output": "api-gateway/router.go",
       "done_when": [
-        "router.go dosyası oluştu",
-        "POST /api/v1/payments endpoint var, Payment Service gRPC çağrısı yapıyor",
-        "GET /api/v1/payments/{id} endpoint var, Payment Service gRPC çağrısı yapıyor",
-        "GET /api/v1/accounts/{id}/balance endpoint var, Account Service gRPC çağrısı yapıyor",
-        "GET /health endpoint var, JWT middleware yok",
-        "httputil.ReverseProxy kullanılmamış",
-        "JWT ve rate limit middleware zinciri var"
+        "router.go file created",
+        "POST /api/v1/payments endpoint exists, calls Payment Service gRPC",
+        "GET /api/v1/payments/{id} endpoint exists, calls Payment Service gRPC",
+        "GET /api/v1/accounts/{id}/balance endpoint exists, calls Account Service gRPC",
+        "GET /health endpoint exists, no JWT middleware",
+        "httputil.ReverseProxy not used",
+        "JWT and rate limit middleware chain applied"
       ]
     },
     {
       "id": 7,
       "phase": "Initializing API Gateway",
-      "title": "main.go — API Gateway başlatma",
-      "description": "api-gateway/main.go oluştur. SPIFFE X509Source başlat. gRPC client bağlantılarını kur. HTTP server'ı port 8080'de başlat. Router'ı kaydet. Graceful shutdown uygula: SIGTERM veya SIGINT sinyalinde açık bağlantıları kapat.",
+      "title": "main.go — Start API Gateway",
+      "description": "Create api-gateway/main.go. Initialize SPIFFE X509Source. Establish gRPC client connections. Start HTTP server on port 8080. Register router. Implement graceful shutdown: close open connections on SIGTERM or SIGINT.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -219,25 +219,25 @@
       ],
       "output": "api-gateway/main.go",
       "done_when": [
-        "main.go dosyası oluştu",
-        "HTTP server port 8080'de başlıyor",
-        "SPIFFE X509Source başlatılıyor",
-        "Graceful shutdown var"
+        "main.go file created",
+        "HTTP server starts on port 8080",
+        "SPIFFE X509Source initialized",
+        "Graceful shutdown implemented"
       ]
     },
     {
       "id": 8,
       "phase": "Initializing Dockerfile",
-      "title": "api-gateway İçin Dockerfile Oluşturma",
-      "description": "api-gateway için dockerfile oluştur. Sistem gereksinimlerine dikkat et. Oluşturduğun Dockerfile'yi build et. Build ettiğin Docker konteynırıın 8080 üzerinde çalıştığından emin ol.",
+      "title": "Create Dockerfile for api-gateway",
+      "description": "Create a dockerfile for api-gateway. Pay attention to system requirements. Build the created Dockerfile. Ensure the built Docker container runs on port 8080.",
       "priority": "high",
       "status": "completed",
       "output": "api-gateway/apigateway.dockerfile",
       "done_when": [
-        "apigateway dockerfile oluşturuldu.",
-        "apigateway dockerfile build edildi.",
-        "apigateway konteynırı çalıştırıldı.",
-        "apigateway 8080 portunda sağlıklı bir şekilde çalışıyor."
+        "apigateway dockerfile created",
+        "apigateway dockerfile built",
+        "apigateway container run",
+        "apigateway running healthily on port 8080"
       ]
     },
     {
@@ -251,97 +251,97 @@
     },
     {
       "id": 10,
-      "phase": "MIT License oluştur ve 'feat: mit license created' commit oluştur ve pushla.",
+      "phase": "Create MIT License and create 'feat: mit license created' commit and push.",
       "status": "completed",
       "output": "git commits pushed",
       "done_when": [
-        "MIT License oluşturuldu."
+        "MIT License created."
       ]
     },
     {
       "id": 11,
       "phase": "Initializing Dockerfile",
-      "title": "WSL için yeniden api-gateway Build etmek.",
-      "description": "api-gateway'i build etmiştik zaten ancak WSL'e taşınıyorum bundan dolayı WSL içerisinde bir kere daha build edilmesi gerekli.",
+      "title": "Rebuild api-gateway for WSL",
+      "description": "We already built api-gateway, but since I am moving to WSL, it needs to be built again within WSL.",
       "priority": "high",
       "status": "completed",
       "output": "api-gateway/apigateway.dockerfile",
       "done_when": [
-        "apigateway dockerfile oluşturuldu.",
-        "apigateway dockerfile build edildi.",
-        "apigateway konteynırı çalıştırıldı.",
-        "apigateway 8080 portunda sağlıklı bir şekilde çalışıyor."
+        "apigateway dockerfile created",
+        "apigateway dockerfile built",
+        "apigateway container run",
+        "apigateway running healthily on port 8080"
       ]
     },
     {
       "id": 12,
       "phase": "Deploy to Kubernetes",
       "title": "Start minikube from deploy-k8s.sh",
-      "description": "example/deploy-8s.sh dosyasında bulunan Install Minikube yapısını yeni bir dosyaya taşımanı istiyorum. /hack/1-minikube-start.sh olarak adlandırman gerekli. WSL üzerinde Minikube çalıştığından emin ol.",
+      "description": "I want you to move the Install Minikube structure found in example/deploy-8s.sh to a new file. Name it /hack/1-minikube-start.sh. Ensure Minikube is running on WSL.",
       "priority": "high",
       "status": "completed",
       "output": "hack/1-minikube-start.sh",
       "done_when": [
-        "hack/1-minikube-start.sh dosyası oluşturuldu.",
-        "Minikube çalışıyor."
+        "hack/1-minikube-start.sh file created",
+        "Minikube is running"
       ]
     },
     {
       "id": 13,
       "phase": "Deploy to Kubernetes",
       "title": "Installing Helm Step",
-      "description": "example/deploy-8s.sh dosyasında bulunan Step 2: Installing Helm yapısını yeni bir dosyaya taşımanı istiyorum. /hack/2-installing-helm.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "description": "I want you to move the Step 2: Installing Helm structure found in example/deploy-8s.sh to a new file. Name it /hack/2-installing-helm.sh. Ensure Helm is running on WSL.",
       "priority": "high",
       "status": "completed",
       "output": "/hack/2-installing-helm.sh",
       "done_when": [
-        "/hack/2-installing-helm.sh dosyası oluşturuldu.",
-        "Helm çalışıyor."
+        "/hack/2-installing-helm.sh file created",
+        "Helm is running"
       ]
     },
     {
       "id": 14,
       "phase": "Deploy to Kubernetes",
       "title": "Starting Minikube Step",
-      "description": "example/deploy-8s.sh dosyasında bulunan Step 3: Starting minikube yapısını yeni bir dosyaya taşımanı istiyorum. /hack/2-starting-minikube.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "description": "I want you to move the Step 3: Starting minikube structure found in example/deploy-8s.sh to a new file. Name it /hack/2-starting-minikube.sh. Ensure Helm is running on WSL.",
       "priority": "high",
       "status": "completed",
       "output": "/hack/2-starting-minikube.sh",
       "done_when": [
-        "/hack/2-starting-minikube.sh dosyası oluşturuldu.",
-        "minikube çalışıyor."
+        "/hack/2-starting-minikube.sh file created",
+        "minikube is running"
       ]
     },
     {
       "id": 15,
       "phase": "Deploy to Kubernetes",
       "title": "Installing SPIRE",
-      "description": "example/deploy-8s.sh dosyasında bulunan Step 4: Installing SPIRE yapısını yeni bir dosyaya taşımanı istiyorum. /hack/4-installing-spire.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol.",
+      "description": "I want you to move the Step 4: Installing SPIRE structure found in example/deploy-8s.sh to a new file. Name it /hack/4-installing-spire.sh. Ensure Helm is running on WSL.",
       "priority": "high",
       "status": "completed",
       "output": "/hack/4-installing-spire.sh ",
       "done_when": [
-        "/hack/4-installing-spire.sh  dosyası oluşturuldu.",
-        "Spire çalışıyor."
+        "/hack/4-installing-spire.sh file created",
+        "Spire is running"
       ]
     },
     {
       "id": 16,
       "phase": "Deploy to Kubernetes",
       "title": "REGISTER SPIRE",
-      "description": "example/deploy-8s.sh dosyasında bulunan Step 4.5: Register each service with SPIRE yapısını yeni bir dosyaya taşımanı istiyorum. /hack/5-register-spire.sh olarak adlandırman gerekli. WSL üzerinde Helm'in çalıştığından emin ol. /.ctx'de bulunan kurallara göre yapmaya dikkat et. Bu Register sadece api-gateway için geçerli, diğerleri için yapma.",
+      "description": "I want you to move the Step 4.5: Register each service with SPIRE structure found in example/deploy-8s.sh to a new file. Name it /hack/5-register-spire.sh. Ensure Helm is running on WSL. Pay attention to the rules in /.ctx. This Register is only for api-gateway, do not do it for others.",
       "priority": "high",
       "status": "completed",
       "output": "/hack/5-register-spire.sh ",
       "done_when": [
-        "api-gateway için register oluşturuldu"
+        "Register created for api-gateway"
       ]
     },
     {
       "id": 17,
       "phase": "Deploy to Kubernetes",
       "title": "Create Deployment, Service, Serviceaccount, Configmap, Memory-related YAMLs for Api-Gateway",
-      "description": "/k8s dosyası içerisinde api-gateway adına title'da bulunan YAML file'lerini oluştur. SPIFFE/SPIRE için gereken kurulumu da orada yap api-gateway adına. Verilecek sertifikanın hangi soketten bağlanacağını vs. de söyle mutlaka YAML'da.",
+      "description": "Create the YAML files mentioned in the title for api-gateway inside the /k8s folder. Also perform the necessary setup for SPIFFE/SPIRE there for api-gateway. Explicitly state in the YAML which socket the certificate will be connected from, etc.",
       "priority": "high",
       "status": "completed",
       "depends_on": [
@@ -349,7 +349,7 @@
       ],
       "output": "apigateway-deployment.yaml, apigateway-service.yaml, apigateway-serviceaccount.yaml, apigateway-configmap.yaml, apigateway-memory.yaml",
       "done_when": [
-        "Api-gateway için, Deployment, Service, Serviceaccount, Configmap, Memory-related Yamls oluşturuldu."
+        "Deployment, Service, Serviceaccount, Configmap, Memory-related Yamls created for Api-gateway."
       ]
     },
     {
@@ -361,17 +361,17 @@
       "id": 18,
       "phase": "Deploy to Kubernetes",
       "title": "Apply Yamls for apigateway",
-      "description": "/k8s dosyası içerisinde api-gateway adına bulunan YAML'ları apply'la ve çalıştığından emin ol. İçerisine girip SPIFFE sertifikası aldığına emin ol. Sistem çalışsın.",
+      "description": "Apply the YAMLs found for api-gateway inside the /k8s folder and ensure it works. Enter inside and ensure it receives SPIFFE certificate. System must work.",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         16,
         17
       ],
       "output": "",
       "done_when": [
-        "api-gateway servisi Kubernetes içerisinde SPIFEE sertifikası aldı.",
-        "api-gateway /health endpointine cevap verdi."
+        "api-gateway service received SPIFFE certificate inside Kubernetes.",
+        "api-gateway returned response to /health endpoint."
       ]
     },
     {
@@ -379,5 +379,58 @@
       "phase": "GITHUB BREAK",
       "description": "Find github.md and apply it."
     },
+    {
+      "id": 20,
+      "phase": "PostgreSQL - HELM",
+      "title": "Create PostgreSQL Instance With HELM",
+      "description": [
+        "Since we will use PostgreSQL integrated with Kubernetes on WSL, download it via Helm.",
+        "For example: helm repo add bitnami https://charts.bitnami.com/bitnami AND helm repo update AND helm install my-postgres bitnami/postgresql --set auth.username=myuser --set auth.password=mypass --set auth.database=mydb",
+        "You can use this to connect, try it. You use this address from services inside the cluster: my-postgres-postgresql.default.svc.cluster.local:5432"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "postgresql helm instance",
+      "done_when": [
+        "PostgreSQL installed via Helm",
+        "Request sent to PostgreSQL connection."
+      ]
+    },
+    {
+      "id": 21,
+      "phase": "PostgreSQL - MIGRATION",
+      "title": "Migrate services.md suggestions to PostgreSQL",
+      "description": [
+        "PostgreSQL created via HELM. Write script to migrate into it.",
+        "Script name migrate/init.sql",
+        "Migrate the script."
+      ],
+      "depends_on": [
+        20
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "init.sql",
+      "done_when": [
+        "Tables created.",
+        "Sample users added."
+      ]
+    },
+    {
+      "id": 21,
+      "phase": "Payment Service",
+      "title": "Payment Service Init",
+      "description": [
+        "I want you to go init the Payment Service and start gRPC inside, with port 8081."
+      ],
+      "priority": "high",
+      "status": "pending",
+      "output": "payment-service/main.go",
+      "done_when": [
+        "Port 8081",
+        "gRPC server started",
+        "payment-service started and tested"
+      ]
+    }
   ]
 }

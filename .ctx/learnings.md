@@ -1,52 +1,68 @@
-# Öğrenilenler — SecurePay
+# Learnings — SecurePay
 
 ## Format
-Bir hata çözüldüğünde veya önemli bir şey öğrenildiğinde buraya ekle:
-- Tarih
-- Ne oldu
-- Nasıl çözüldü
-- Bir daha nasıl önlenir
+Add here when a bug is resolved or something important is learned:
+- Date
+- What happened
+- How it was resolved
+- How to prevent it next time
 
 ---
 
-## [2026-02-15] Başlangıç
-Henüz öğrenme kaydı yok.
+## [2026-02-15] Initial
+No learning records yet.
 
-## [2026-02-15] Task Durum Senkronizasyonu
-Tasks.json'da "completed" görünen bir task'ın ("id: 1") dosyalarının diskte olmadığı fark edildi.
-Task durumu ile dosya sistemi arasında tutarsızlık olabilir, her zaman dosya sistemini kontrol et.
-Çözüm: Dosyalar yeniden oluşturuldu.
+## [2026-02-15] Task Status Synchronization
+It was noticed that files for a task marked "completed" in Tasks.json ("id: 1") were not on disk.
+There might be inconsistency between task status and file system, always check the file system.
+Solution: Files were recreated.
 
-## [2026-02-15] Proto Dosyaları Eksikliği
-API Gateway gRPC client implementasyonu sırasında backend servisleri için proto dosyalarının veya generated kodların olmadığı fark edildi.
-Çözüm: `PaymentServiceClient` arayüzü geçici olarak mocklandı. Backend servisleri (`payment-service`, `account-service`) proto tanımları yapıldıktan sonra gerçek generated kod kullanılmalı.
-Konvansiyonlarda `proto/gen/go/` klasörü beklenirken mevcut değil. But task 3.1 addressed creating proto files.
+## [2026-02-15] Missing Proto Files
+During API Gateway gRPC client implementation, it was noticed that proto files or generated codes for backend services were missing.
+Solution: `PaymentServiceClient` interface was mocked temporarily. Real generated code should be used after backend services (`payment-service`, `account-service`) proto definitions are made.
+In conventions, `proto/gen/go/` folder is expected but not present. But task 3.1 addressed creating proto files.
 
-## [2026-02-15] Protoc Compiler Eksikliği ve Çözümü
-Task 3.1 kapsamında proto dosyaları oluşturuldu ancak ilk başta `protoc` bulunamadığı sanıldı.
-Daha sonra `go install` ile pluginler kuruldu ve `protoc` sistemde (v33.5) tespit edildi.
-`proto` klasörü ayrı bir Go modülü yapıldı ve `go.work` ile `api-gateway` modülüne bağlandı.
-Generated kodlar başarıyla oluşturuldu ve `grpc_clients.go` güncellendi.
+## [2026-02-15] Protoc Compiler Missing and Solution
+Proto files were created under Task 3.1 but `protoc` was initially thought to be missing.
+Later, plugins were installed with `go install` and `protoc` was detected on the system (v33.5).
+`proto` folder was made a separate Go module and linked to `api-gateway` module with `go.work`.
+Generated codes were successfully created and `grpc_clients.go` was updated.
 
 ## [2026-02-15] Minikube Docker Driver (WSL)
-Minikube'un WSL üzerinde `docker` driver ile başlatılması gerektiği tekrarlandı. `virtualbox` veya diğer driver'lar WSL'de sorun çıkarabilir.
-Çözüm: `minikube start --driver=docker` komutu kullanıldı.
+It was reiterated that Minikube should be started with `docker` driver on WSL. `virtualbox` or other drivers may cause issues on WSL.
+Solution: `minikube start --driver=docker` command was used.
 
-## [2026-02-15] PowerShell Komut Zincirleme
-PowerShell ortamında `&&` operatörü çalışmıyor.
-Çözüm: Komutları ayrı ayrı çalıştırmak veya `;` (veya powershell sürümüne göre uygun operatör) kullanmak.
-## [2026-02-15] Minikube ve Docker Credential Helper Sorunu (WSL)
-WSL ortamında `eval $(minikube docker-env)` kullanıldığında, Docker build işlemi `docker-credential-desktop.exe: exec format error` hatası veriyor. Çünkü Minikube environment'ı Linux tabanlı olmasına rağmen Windows credential helper'ı çağırmaya çalışıyor.
-Çözüm: `DOCKER_CONFIG` environment variable'ı ile credential helper içermeyen boş bir config dosyası gösterilerek build işlemi yapılabilir. Alternatif olarak imaj tag'i değiştirilip cache bypass edilebilir.
+## [2026-02-15] PowerShell Command Chaining
+`&&` operator does not work in PowerShell environment.
+Solution: Execute commands separately or use `;` (or appropriate operator based on powershell version).
+
+## [2026-02-15] Minikube and Docker Credential Helper Issue (WSL)
+When `eval $(minikube docker-env)` is used in WSL environment, Docker build process gives `docker-credential-desktop.exe: exec format error`. Because even though Minikube environment is Linux-based, it tries to call Windows credential helper.
+Solution: Build process can be done by pointing to an empty config file without credential helper using `DOCKER_CONFIG` environment variable. Alternatively, image tag can be changed to bypass cache.
 
 ## [2026-02-15] Minikube Image Caching
-Minikube, yerel olarak build edilen ve `imagePullPolicy: Never` olan imajlarda `latest` tag'ini güncellemekte zorlanıyor. Pod restart edilse bile eski imaj ID'si kullanılabiliyor.
-Çözüm: Imaj tag'ini değiştirmek (örn: `v1.0.0`) en kesin çözümdür.
+Minikube struggles to update the `latest` tag for images built locally with `imagePullPolicy: Never`. Old image ID might be used even if Pod is restarted.
+Solution: Changing image tag (e.g., `v1.0.0`) is the most definitive solution.
 
-## [2026-02-15] SPIFFE Socket Mount Yöntemi
-Kubernetes ortamında `csi.spiffe.io` driver kullanımı bazı durumlarda kararsızlık yaratabiliyor veya path sorunlarına yol açabiliyor.
-Çözüm: `HostPath` volume kullanarak `/run/spire/agent-sockets` dizinini mount etmek daha stabil ve güvenilir bir yöntemdir.
+## [2026-02-15] SPIFFE Socket Mount Method
+Using `csi.spiffe.io` driver in Kubernetes environment can cause instability or path issues in some cases.
+Solution: Mounting `/run/spire/agent-sockets` directory using `HostPath` volume is a more stable and reliable method.
 
-## [2026-02-15] Servis Bağımlılıkları ve Başlangıç
-API Gateway gibi servislerin, bağımlı oldukları backend servisleri (Payment, Account) henüz ayakta olmasa bile açılabilmesi, geliştirme ve test süreçlerini kolaylaştırır.
-Çözüm: `main.go` içerisinde servis bağlantı (dial) hataları `Fatal` yerine `Warning` seviyesine çekilerek uygulamanın çökmesi engellendi ve `/health` endpointi erişilebilir kılındı.
+## [2026-02-15] Service Dependencies and Startup
+Ability to start services like API Gateway even if dependent backend services (Payment, Account) are not up yet facilitates development and testing processes.
+Solution: Service connection (dial) errors in `main.go` were demoted from `Fatal` to `Warning` level, preventing app crash and making `/health` endpoint accessible.
+
+## [2026-02-16] Docker Credential Helper Issue in Helm Installation (WSL)
+During Helm chart installation (`helm install`), Docker credential helper error (`exec format error`) can also be received. Because Helm uses Docker configuration for local chart cache operations.
+Solution: Credential helper can be disabled using `DOCKER_CONFIG` environment variable.
+
+## [2026-02-16] PostgreSQL Connection Test
+Using a temporary pod (`kubectl run --rm`) is practical to test database connections inside Kubernetes.
+Example: `kubectl run test-db --rm -i --image=postgres:alpine --env="PGPASSWORD=password" -- sh -c 'psql -h my-postgres-postgresql -U securepay -d securepay -c "SELECT 1"'`
+
+## [2026-02-16] PostgreSQL Connection and Migration
+Using `kubectl cp` to copy files and then executing with `exec` is the most stable method to avoid symbolic link and path errors.
+Also, PostgreSQL password installed with Helm is usually stored in a secret as base64 encoded.
+Secret name is in `<release-name>-postgresql` format. Key `password` holds the specific user password, `postgres-password` holds the admin password.
+Database name and username are determined during Helm installation, defaults might be `postgres` but if changed with `--set` (e.g., `securepay`), this should be noted.
+Command: `kubectl get secret my-postgres-postgresql -o jsonpath="{.data.password}" | base64 -d`

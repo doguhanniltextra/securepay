@@ -1,62 +1,62 @@
-# Mimari — SecurePay
+# Architecture — SecurePay
 
-## Genel Bakış
+## Overview
 Zero-Trust Fintech Payment Platform.
-SPIFFE/SPIRE ile servis kimlik doğrulama,
-OpenTelemetry ile distributed tracing,
-Kafka ile event-driven mimari.
+Authentication via SPIFFE/SPIRE,
+Distributed tracing with OpenTelemetry,
+Event-driven architecture with Kafka.
 
-## Servisler ve Portlar
-| Servis               | Dil                  | Port  | Görev                                      |
+## Services and Ports
+| Service              | Language             | Port  | Role                                       |
 |----------------------|----------------------|-------|--------------------------------------------|
-| API Gateway          | Go 1.24              | 8080  | Routing, rate limiting, JWT doğrulama      |
-| Payment Service      | Go 1.24              | 8081  | Ödeme başlatma, validasyon, state machine  |
-| Account Service      | Go 1.24              | 50051 | Bakiye yönetimi, gRPC server               |
-| Notification Service | Java 21/Spring Boot  | 8083  | Kafka consumer, bildirim kaydı             |
-| SPIRE Server         | SPIRE v1.x           | 8081  | SVID dağıtımı                              |
+| API Gateway          | Go 1.24              | 8080  | Routing, rate limiting, JWT verification   |
+| Payment Service      | Go 1.24              | 8081  | Payment initiation, validation, state machine |
+| Account Service      | Go 1.24              | 50051 | Balance management, gRPC server            |
+| Notification Service | Java 21/Spring Boot  | 8083  | Kafka consumer, notification logging       |
+| SPIRE Server         | SPIRE v1.x           | 8081  | SVID distribution                          |
 | Kafka                | Apache Kafka         | 9092  | Event bus                                  |
-| PostgreSQL           | PostgreSQL 16        | 5432  | Kalıcı veri                                |
+| PostgreSQL           | PostgreSQL 16        | 5432  | Persistent data                            |
 | Redis                | Redis 7              | 6379  | Cache + idempotency                        |
-| Jaeger               | Jaeger v2            | 16686 | Trace görselleştirme                       |
+| Jaeger               | Jaeger v2            | 16686 | Trace visualization                        |
 | Prometheus           | Latest               | 9090  | Metrics                                    |
 | Grafana              | Latest               | 3000  | Dashboard                                  |
 
-## SPIFFE ID Şeması
+## SPIFFE ID Scheme
 - spiffe://securepay.dev/api-gateway
 - spiffe://securepay.dev/payment-service
 - spiffe://securepay.dev/account-service
 - spiffe://securepay.dev/notification-service
 
-## Katman Yapısı
-Katman 1 — Dış Erişim:
+## Layer Structure
+Layer 1 — External Access:
   Client → API Gateway (HTTP, JWT)
-  Hiçbir mikroservis dışarıya açık değil
+  No microservice is exposed to the outside
 
-Katman 2 — Servisler Arası (Zero-Trust):
+Layer 2 — Inter-Service (Zero-Trust):
   Payment Service ↔ Account Service (gRPC + mTLS via SPIFFE)
-  Statik credential YOK, SVID tabanlı kimlik
+  NO static credentials, SVID-based identity
 
-Katman 3 — Async Event Bus:
+Layer 3 — Async Event Bus:
   Payment Service → Kafka → Account Service
   Payment Service → Kafka → Notification Service
-  Ayrı consumer group'lar: account-service-group, notification-service-group
+  Separate consumer groups: account-service-group, notification-service-group
 
-## Ödeme Akışı (8 adım)
+## Payment Flow (8 steps)
 1. Client → API Gateway (HTTP POST /payments, JWT)
 2. API Gateway → Payment Service (gRPC, mTLS/SPIFFE)
-3. Payment Service → Account Service (gRPC, bakiye kontrolü)
+3. Payment Service → Account Service (gRPC, balance check)
 4. Account Service → Redis (cache lookup)
-5. Account Service → PostgreSQL (cache miss ise)
+5. Account Service → PostgreSQL (if cache miss)
 6. Payment Service → Kafka (payment.initiated event)
-7. Kafka → Account Service (bakiye güncelle)
-8. Kafka → Notification Service (bildirim kaydı)
+7. Kafka → Account Service (update balance)
+8. Kafka → Notification Service (log notification)
 
-## Veritabanı
-- payments schema: transactions tablosu
-- accounts schema: balances tablosu
-- Aynı PostgreSQL instance, farklı schema (operasyonel basitlik)
+## Database
+- payments schema: transactions table
+- accounts schema: balances table
+- Same PostgreSQL instance, different schemas (operational simplicity)
 
-## Kapsam Dışı
-- Kafka transport security (README'de belgelenecek)
-- SPIRE HA kurulumu (single node yeterli)
-- OpenTelemetry Collector (servisler doğrudan Jaeger'a gönderir)
+## Out of Scope
+- Kafka transport security (to be documented in README)
+- SPIRE HA setup (single node sufficient)
+- OpenTelemetry Collector (services send directly to Jaeger)

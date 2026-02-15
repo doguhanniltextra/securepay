@@ -1,60 +1,60 @@
-# Mimari Kararlar — SecurePay
+# Architectural Decisions — SecurePay
 
-## [2026-02-15] Polyglot mimari: Go + Java
+## [2026-02-15] Polyglot architecture: Go + Java
 
-**Neden:** Her servisin sorumluluğuna göre dil seçimi yapıldı.
-**Seçim:**
-- Go: API Gateway, Payment Service, Account Service (kritik servisler)
-- Java/Spring Boot: Notification Service (basit IO-bound servis)
-**Sonuç:**
-- CV'de Go ağırlıklı profil öne çıkıyor
-- Java tamamen dışarıda kalmıyor, polyglot anlatısı güçleniyor
-- Mülakatta "Kritik servisler için Go, basit IO servisleri için Spring Boot" açıklaması yapılabilir
+**Reason:** Language selection based on service responsibility.
+**Choice:**
+- Go: API Gateway, Payment Service, Account Service (critical services)
+- Java/Spring Boot: Notification Service (simple IO-bound service)
+**Outcome:**
+- Go-heavy profile highlighted in CV
+- Java is not completely excluded, strengthening the polyglot narrative
+- In interviews, can explain: "Go for critical services, Spring Boot for simple IO services"
 
-## [2026-02-15] Servis iletişimi: gRPC + mTLS
+## [2026-02-15] Service communication: gRPC + mTLS
 
-**Neden:** SPIFFE mTLS ile gRPC daha temiz entegre oluyor.
-**Seçim:** gRPC (REST alternatifi yerine)
-**Sonuç:** CV'de gRPC satırı somutlaşıyor. mTLS otomatik SVID rotasyonu sağlıyor.
+**Reason:** gRPC integrates cleaner with SPIFFE mTLS.
+**Choice:** gRPC (instead of REST)
+**Outcome:** gRPC line in CV becomes concrete. mTLS provides automatic SVID rotation.
 
-## [2026-02-15] SVID yönetimi: SPIFFE Go SDK
+## [2026-02-15] SVID management: SPIFFE Go SDK
 
-**Neden:** Manuel X.509 yüklemede rotation için ek kod gerekiyor.
-**Seçim:** SPIFFE Go SDK
-**Sonuç:** SDK otomatik rotasyon sağlıyor, kod basit kalıyor.
+**Reason:** Manual X.509 loading requires extra code for rotation.
+**Choice:** SPIFFE Go SDK
+**Outcome:** SDK provides automatic rotation, code remains simple.
 
 ## [2026-02-15] Trace backend: Jaeger
 
-**Neden:** OTLP native desteği ve all-in-one image ile kolay setup.
-**Seçim:** Jaeger (Grafana Tempo alternatifi yerine)
-**Sonuç:** docker run ile tek container yeterli.
+**Reason:** OTLP native support and easy setup with all-in-one image.
+**Choice:** Jaeger (instead of Grafana Tempo)
+**Outcome:** docker run sufficient for single container.
 
-## [2026-02-15] Kafka security: Kapsam dışı
+## [2026-02-15] Kafka security: Out of Scope
 
-**Neden:** 10-11 günlük süreye sığmıyor.
-**Seçim:** Kafka mTLS/SASL bu iterasyonda yok.
-**Sonuç:** README'de belgelenecek: "Kafka transport security is out of scope for this iteration."
+**Reason:** Does not fit into the 10-11 day timeframe.
+**Choice:** No Kafka mTLS/SASL in this iteration.
+**Outcome:** Document in README: "Kafka transport security is out of scope for this iteration."
 
-## [2026-02-15] DB izolasyonu: Ayrı schema
+## [2026-02-15] DB isolation: Separate schemas
 
-**Neden:** Ayrı instance operasyonel kompleksite yaratır.
-**Seçim:** Aynı PostgreSQL, farklı schema (payments, accounts)
-**Sonuç:** Production'da ayrı instance tercih edilir ama dev için yeterli.
+**Reason:** Separate instances create operational complexity.
+**Choice:** Same PostgreSQL, different schemas (payments, accounts)
+**Outcome:** Separate instances preferred in production, but distinct schemas sufficient for dev.
 
-## [2026-02-15] Cache stratejisi: Read-aside
+## [2026-02-15] Cache strategy: Read-aside
 
-**Neden:** Bakiye okuma ağırlıklı, write-through gerekmez.
-**Seçim:** Read-aside cache (Redis)
-**Sonuç:** Cache miss ise PostgreSQL'den çek, Redis'e yaz. TTL: 60s.
+**Reason:** Balance heavy on reads, write-through not necessary.
+**Choice:** Read-aside cache (Redis)
+**Outcome:** If cache miss, fetch from PostgreSQL, write to Redis. TTL: 60s.
 
-## [2026-02-15] OpenTelemetry Collector: Yok
+## [2026-02-15] OpenTelemetry Collector: None
 
-**Neden:** Projenin scope'unu aşıyor.
-**Seçim:** Servisler doğrudan Jaeger'a OTLP gönderir.
-**Sonuç:** Daha az altyapı, daha basit setup.
+**Reason:** Exceeds project scope.
+**Choice:** Services send OTLP directly to Jaeger.
+**Outcome:** Less infrastructure, simpler setup.
 
-## [2026-02-15] Hard-Coded Endpoints: Yok
+## [2026-02-15] Hard-Coded Endpoints: None
 
-**Neden:** Projenin derli toplu olmasını istiyoruz.
-**Seçim:** `endpoints.go` belgesi açılır ve oraya kaydedilir.
-**Sonuç:** Daha karmaşık endpoint yapısı.
+**Reason:** We want the project to be organized.
+**Choice:** Open `endpoints.go` document and register there.
+**Outcome:** More complex endpoint structure.

@@ -1,29 +1,24 @@
-## Kullanıcının Yakaladığı Hatalar
+# User Caught Errors
 
-- Bu markdown sadece kullanıcı tarafından değişime uğratılabilir.
+- This markdown can only be modified by the user.
 
-## Hatalar
+## File Permissions
 
-- Yapay Zeka, api-gateway/router.go servisinde @decisions.md içerisinde bulunan Endpoint kuralına uymadı.
-- Yapay Zeka, verdiğim kesin talimat olan port 8080'i 8081'e çevirdi. Bu yasaklı.
+| Filepath      | Permission | Action on Completion              |
+|---------------|------------|-----------------------------------|
+| [tasks.json](\\wsl.localhost\Ubuntu\home\doguhan\securepay\securepay\tasks.json)  | READ-ONLY  | **REPORT ONLY** (Do NOT edit file)|
+| .ctx/*.md   | READ-ONLY | **REPORT ONLY** (Do NOT edit file)                    |
 
-## Yasaklar
+## APPLICATION PROTOCOLS (STRICT)
 
-- task.json dosyasına yazmak yasaklı.
-- .ctx/penalty.md dosyasına yazmak yasaklı.
-- .ctx/learnings.md dosyasına yazmak yasaklı.
-- .ctx/decisions.md dosyasına yazmak yasaklı.
-- .ctx/plan.md dosyasına yazmak yasaklı.
-- .ctx/context.md dosyasına yazmak yasaklı.
-- .ctx/instructions.md dosyasına yazmak yasaklı.
-- .ctx/rules.md dosyasına yazmak yasaklı.
-- .ctx/summary.md dosyasına yazmak yasaklı.
-- .ctx/tasks.md dosyasına yazmak yasaklı.
-- .ctx/todos.md dosyasına yazmak yasaklı.
-- .ctx/updates.md dosyasına yazmak yasaklı.
+| Scenario | Forbidden Pattern | Mandatory Pattern | Reason |
+| :--- | :--- | :--- | :--- |
+| **User Interaction** | Emoji (e.g., ✅, 🚀) | Plain text only | Professional tone requirement. |
+| **Task Start** | (Silence) | "I read, starting" | Explicit confirmation requirement. |
+| **Shell Commands** | `command1 && command2` | `command1` <br> `command2` | PowerShell compatibility issue. |
 
-## Ek Kurallar
-
-- Emoji kullanmak yasaklı.
-- Okudum, başlıyorum demek kesin olarak var.
-- Powershell ya da CMD'de komut yazarken '&&' kullanmak yasaklı.
+### PRE-OPERATION CHECKLIST
+Verify the following before performing any operation:
+1. [] Am I using emojis? -> STOP. Delete.
+2. [] Is this the first response? -> SAY "I read, starting".
+3. [] Is there `&&` in the command? -> REWRITE as separate commands.
