@@ -1,0 +1,229 @@
+{
+  "project": "securepay",
+  "author": "Doğuhan İlter",
+  "created": "2026-02-15",
+  "context_files": [
+    ".ctx/architecture.md",
+    ".ctx/conventions.md",
+    ".ctx/decisions.md"
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "phase": "Initializing API Gateway",
+      "title": "SPIFFE — SVID yükle ve mTLS credential üret",
+      "description": "api-gateway/spiffe.go oluştur. SPIFFE Go SDK kullanarak SPIRE Agent'tan X.509 SVID al. SPIFFE ID: spiffe://securepay.dev/api-gateway. Payment Service için mTLS client credential dönen fonksiyon yaz: SPIFFE ID spiffe://securepay.dev/payment-service olarak doğrulansın. Account Service için mTLS client credential dönen fonksiyon yaz: SPIFFE ID spiffe://securepay.dev/account-service olarak doğrulansın. Socket path: /tmp/spire-agent/public/api.sock.",
+      "priority": "high",
+      "status": "completed",
+      "output": "api-gateway/spiffe.go",
+      "done_when": [
+        "spiffe.go dosyası oluştu",
+        "workloadapi.NewX509Source ile SVID alınıyor",
+        "Payment Service için mTLS credential fonksiyonu var",
+        "Account Service için mTLS credential fonksiyonu var",
+        "Her iki fonksiyon SPIFFE ID doğrulaması yapıyor"
+      ]
+    },
+    {
+      "id": 2,
+      "phase": "Initializing API Gateway",
+      "title": "gRPC Client — Payment Service bağlantısı",
+      "description": "api-gateway/grpc_clients.go oluştur. spiffe.go'daki Payment Service mTLS credential fonksiyonunu kullan. grpc.Dial ile payment-service:50051'e bağlan. PaymentServiceClient dönen bir fonksiyon yaz. Statik credential veya insecure bağlantı kullanma.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        1
+      ],
+      "output": "api-gateway/grpc_clients.go",
+      "done_when": [
+        "grpc_clients.go dosyası oluştu",
+        "Payment Service için grpc.Dial var",
+        "mTLS credential spiffe.go'dan geliyor",
+        "insecure bağlantı yok"
+      ]
+    },
+    {
+      "id": 3,
+      "phase": "Initializing API Gateway",
+      "title": "gRPC Client — Account Service bağlantısı",
+      "description": "api-gateway/grpc_clients.go dosyasına Account Service bağlantısını ekle. spiffe.go'daki Account Service mTLS credential fonksiyonunu kullan. grpc.Dial ile account-service:50051'e bağlan. AccountServiceClient dönen bir fonksiyon yaz.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        1
+      ],
+      "output": "api-gateway/grpc_clients.go",
+      "done_when": [
+        "Account Service için grpc.Dial var",
+        "mTLS credential spiffe.go'dan geliyor",
+        "AccountServiceClient dönen fonksiyon var"
+      ]
+    },
+    {
+      "id": 3.1,
+      "phase": "Initializing API Gateway",
+      "title": "gRPC Proto tanımları",
+      "description": "proto/ klasörü oluştur. İki proto dosyası yaz. (1) proto/payment.proto: PaymentService için InitiatePayment ve GetPayment RPC tanımla. InitiatePaymentRequest: payment_id string, from_account string, to_account string, amount double, currency string, idempotency_key string. InitiatePaymentResponse: payment_id string, status enum (PENDING, COMPLETED, FAILED), message string. (2) proto/account.proto: AccountService için CheckBalance RPC tanımla. CheckBalanceRequest: account_id string. CheckBalanceResponse: account_id string, balance double, currency string. Her iki dosyada go_package tanımlı olsun.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        1,
+        2,
+        3
+      ],
+      "output": "proto/payment.proto, proto/account.proto",
+      "done_when": [
+        "proto/payment.proto oluştu",
+        "proto/account.proto oluştu",
+        "InitiatePayment RPC tanımlı",
+        "GetPayment RPC tanımlı",
+        "CheckBalance RPC tanımlı",
+        "go_package her iki dosyada tanımlı",
+        "protoc ile compile edilebilir"
+      ]
+    },
+    {
+      "id": 3.2,
+      "phase": "Initializing API Gateway",
+      "title": "gRPC Proto derleme",
+      "description": "Development ortamında `protoc` ve `protoc-gen-go` pluginlerinin kurulumu yap ve testini yap.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "output": "compiled proto files",
+      "done_when": [
+        "Compiled proto files created."
+      ]
+    },
+    {
+      "id": 3.3,
+      "phase": "Initializing API Gateway",
+      "title": "gRPC Proto derleme ve main.go oluşturma.",
+      "description": "Basit bir main.go oluştur. grpc_clients.go için yeniden go build komutunu çalıştır. Proto'nun çalıştığından emin ol. Main.go sadece port açsın 8080 üzerinden. Bu port hard-coded olabilir. ",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        1,
+        2,
+        3,
+      ],
+      "output": "api-gateway/main.go",
+      "done_when": [
+        "main.go oluşturuldu",
+        "Port 8080 olarak verildi.",
+        "Proto çalışıyor."
+      ]
+    },
+    {
+      "id": 4,
+      "phase": "Initializing API Gateway",
+      "title": "Middleware — JWT doğrulama",
+      "description": "api-gateway/middleware/jwt.go oluştur. Authorization header'dan Bearer token al. Token'ı doğrula. Geçersiz token için 401 dön. Geçerli token için next handler'a geç. Sadece /api/v1/ prefix'li endpoint'lere uygulansın, /health hariç.",
+      "priority": "high",
+      "status": "completed",
+      "output": "api-gateway/middleware/jwt.go",
+      "done_when": [
+        "jwt.go dosyası oluştu",
+        "Bearer token parse ediliyor",
+        "Geçersiz token 401 dönüyor",
+        "/health endpoint JWT'den muaf"
+      ]
+    },
+    {
+      "id": 4.1,
+      "phase": "Initializing API Gateway",
+      "title": "Middleware — JWT doğrulama - Curl İstek Atımı",
+      "description": "api-gateway/middleware/jwt.go oluşturdun. /health endpoint'inin JWT tokeni istemediğinden emin ol. Diğerlerinin JWT istediğinden emin ol. Diğerlerine hard-coded olarak verilen JWT verildiğinde girildiğinde success verdiğinden emin ol.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        4
+      ],
+      "output": "",
+      "done_when": [
+        "Tüm Curl sonuçları başarılı sonuç verdi."
+      ]
+    },
+    {
+      "id": 5,
+      "phase": "Initializing API Gateway",
+      "title": "Middleware — Rate limiting",
+      "description": "api-gateway/middleware/ratelimit.go oluştur. Her IP için dakikada max 100 istek. Limit aşılınca 429 Too Many Requests dön. In-memory token bucket yeterli, Redis gerekmez. Basit tutulacak.",
+      "priority": "high",
+      "status": "completed",
+      "output": "api-gateway/middleware/ratelimit.go",
+      "done_when": [
+        "ratelimit.go dosyası oluştu",
+        "IP bazlı limit var",
+        "Dakikada max 100 istek",
+        "Limit aşılınca 429 dönüyor"
+      ]
+    },
+    {
+      "id": 5.1,
+      "phase": "GitHub Break",
+      "title": "Push Previous ID's To GitHub",
+      "description": "Önceki ID'lerde oluşturduğumuz dosyaları conventional commits kullanarak, ID-based bir şekilde git add --> git commit -m 'conventional_commits(scope): ID's description with formal way' --> git push origin master şeklinde yapmanı istiyorum. Her ID kendi içerisinde yeni bir commit olmalı. Commitler ingilizce olmalı.",
+      "priority": "high",
+      "status": "pending",
+      "depends_on": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "output": "",
+      "done_when": [
+        "1,2,3,4,5 ID pushed to GitHub"
+      ]
+    },
+    {
+      "id": 6,
+      "phase": "Initializing API Gateway",
+      "title": "Router — route tanımları",
+      "description": "api-gateway/router.go oluştur. Bu dosya SADECE route tanımları içerir, iş mantığı içermez. Endpoint'ler: POST /api/v1/payments, GET /api/v1/payments/{id}, GET /api/v1/accounts/{id}/balance, GET /health. /api/v1/ endpoint'lerine JWT ve rate limit middleware zinciri uygula. Her endpoint HTTP isteği alır, grpc_clients.go'daki ilgili gRPC client ile downstream servise iletir, gRPC cevabını HTTP olarak döner. httputil.ReverseProxy kullanma. Handler stub olarak bırakma, gerçek gRPC çağrısı yap.",
+      "priority": "high",
+      "status": "pending",
+      "depends_on": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "output": "api-gateway/router.go",
+      "done_when": [
+        "router.go dosyası oluştu",
+        "POST /api/v1/payments endpoint var, Payment Service gRPC çağrısı yapıyor",
+        "GET /api/v1/payments/{id} endpoint var, Payment Service gRPC çağrısı yapıyor",
+        "GET /api/v1/accounts/{id}/balance endpoint var, Account Service gRPC çağrısı yapıyor",
+        "GET /health endpoint var, JWT middleware yok",
+        "httputil.ReverseProxy kullanılmamış",
+        "JWT ve rate limit middleware zinciri var"
+      ]
+    },
+    {
+      "id": 7,
+      "phase": "Initializing API Gateway",
+      "title": "main.go — API Gateway başlatma",
+      "description": "api-gateway/main.go oluştur. SPIFFE X509Source başlat. gRPC client bağlantılarını kur. HTTP server'ı port 8080'de başlat. Router'ı kaydet. Graceful shutdown uygula: SIGTERM veya SIGINT sinyalinde açık bağlantıları kapat.",
+      "priority": "high",
+      "status": "pending",
+      "depends_on": [
+        6
+      ],
+      "output": "api-gateway/main.go",
+      "done_when": [
+        "main.go dosyası oluştu",
+        "HTTP server port 8080'de başlıyor",
+        "SPIFFE X509Source başlatılıyor",
+        "Graceful shutdown var"
+      ]
+    }
+  ]
+}
