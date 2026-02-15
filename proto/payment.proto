@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package payment.v1;
+
+option go_package = "securepay/proto/gen/go/payment/v1;paymentv1";
+
+service PaymentService {
+  rpc InitiatePayment(InitiatePaymentRequest) returns (InitiatePaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+}
+
+message InitiatePaymentRequest {
+  string payment_id = 1;
+  string from_account = 2;
+  string to_account = 3;
+  double amount = 4;
+  string currency = 5;
+  string idempotency_key = 6;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  COMPLETED = 2;
+  FAILED = 3;
+}
+
+message InitiatePaymentResponse {
+  string payment_id = 1;
+  PaymentStatus status = 2;
+  string message = 3;
+}
+
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentResponse {
+  string payment_id = 1;
+  PaymentStatus status = 2;
+  string message = 3;
+  double amount = 4;
+  string currency = 5;
+  string from_account = 6;
+  string to_account = 7;
+}

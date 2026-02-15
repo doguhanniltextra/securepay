@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package account.v1;
+
+option go_package = "securepay/proto/gen/go/account/v1;accountv1";
+
+service AccountService {
+  rpc CheckBalance(CheckBalanceRequest) returns (CheckBalanceResponse);
+}
+
+message CheckBalanceRequest {
+  string account_id = 1;
+}
+
+message CheckBalanceResponse {
+  string account_id = 1;
+  double balance = 2; // In production, use integer for monetary values (e.g. cents)
+  string currency = 3;
+}
