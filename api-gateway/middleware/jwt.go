@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"securepay/api-gateway/endpoints"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -15,7 +17,7 @@ var jwtSecret = []byte("securepay-secret-key")
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip validation for non-API endpoints
-		if !strings.HasPrefix(r.URL.Path, "/api/v1/") {
+		if !strings.HasPrefix(r.URL.Path, endpoints.APIPrefix) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -24,7 +26,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// or if any other public endpoint is needed in future.
 		// Task says /health is exempt. Assuming /health is root, it's covered by prefix check above.
 		// But adding explicit check for robustness if path structure changes.
-		if strings.HasSuffix(r.URL.Path, "/health") {
+		if strings.HasSuffix(r.URL.Path, endpoints.HealthCheckPath) {
 			next.ServeHTTP(w, r)
 			return
 		}
