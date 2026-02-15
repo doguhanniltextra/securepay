@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
@@ -12,16 +13,22 @@ import (
 )
 
 const (
-	// SocketPath is the path to the SPIRE Agent's workload API socket
-	SocketPath = "unix:///tmp/spire-agent/public/api.sock"
+	// SocketPath is the default path to the SPIRE Agent's workload API socket
+	DefaultSocketPath = "unix:///tmp/spire-agent/public/api.sock"
 )
 
 // InitSPIFFESource initializes and returns a new X.509 source connected to the SPIRE Agent.
 // It is the caller's responsibility to close the source when done.
 func InitSPIFFESource(ctx context.Context) (*workloadapi.X509Source, error) {
+	// Check for environment variable override
+	socketPath := os.Getenv("SPIFFE_ENDPOINT_SOCKET")
+	if socketPath == "" {
+		socketPath = DefaultSocketPath
+	}
+
 	// Create a new X.509 source with the configured socket path.
 	// The source will automatically fetch and renew SVIDs.
-	clientOptions := workloadapi.WithClientOptions(workloadapi.WithAddr(SocketPath))
+	clientOptions := workloadapi.WithClientOptions(workloadapi.WithAddr(socketPath))
 	source, err := workloadapi.NewX509Source(ctx, clientOptions)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create X509Source: %w", err)

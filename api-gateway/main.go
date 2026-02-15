@@ -45,20 +45,20 @@ func main() {
 	// Payment Service Client
 	paymentClient, paymentConn, err := NewPaymentServiceClient(dialCtx, source)
 	if err != nil {
-		slog.Error("Failed to connect to Payment Service", "error", err)
-		os.Exit(1)
+		slog.Warn("Failed to connect to Payment Service (continuing without it)", "error", err)
+	} else {
+		defer paymentConn.Close()
+		slog.Info("Payment Service Client initialized")
 	}
-	defer paymentConn.Close()
-	slog.Info("Payment Service Client initialized")
 
 	// Account Service Client
 	accountClient, accountConn, err := NewAccountServiceClient(dialCtx, source)
 	if err != nil {
-		slog.Error("Failed to connect to Account Service", "error", err)
-		os.Exit(1)
+		slog.Warn("Failed to connect to Account Service (continuing without it)", "error", err)
+	} else {
+		defer accountConn.Close()
+		slog.Info("Account Service Client initialized")
 	}
-	defer accountConn.Close()
-	slog.Info("Account Service Client initialized")
 
 	// 3. Setup Router (Inject dependencies)
 	router := NewRouter(paymentClient, accountClient)

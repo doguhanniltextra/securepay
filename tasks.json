@@ -373,6 +373,11 @@
         "api-gateway servisi Kubernetes içerisinde SPIFEE sertifikası aldı.",
         "api-gateway /health endpointine cevap verdi."
       ]
-    }
+    },
+    {
+      "id": 19,
+      "phase": "GITHUB BREAK",
+      "description": "Find github.md and apply it."
+    },
   ]
 }

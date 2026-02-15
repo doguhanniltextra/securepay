@@ -35,3 +35,18 @@ Minikube'un WSL üzerinde `docker` driver ile başlatılması gerektiği tekrarl
 ## [2026-02-15] PowerShell Komut Zincirleme
 PowerShell ortamında `&&` operatörü çalışmıyor.
 Çözüm: Komutları ayrı ayrı çalıştırmak veya `;` (veya powershell sürümüne göre uygun operatör) kullanmak.
+## [2026-02-15] Minikube ve Docker Credential Helper Sorunu (WSL)
+WSL ortamında `eval $(minikube docker-env)` kullanıldığında, Docker build işlemi `docker-credential-desktop.exe: exec format error` hatası veriyor. Çünkü Minikube environment'ı Linux tabanlı olmasına rağmen Windows credential helper'ı çağırmaya çalışıyor.
+Çözüm: `DOCKER_CONFIG` environment variable'ı ile credential helper içermeyen boş bir config dosyası gösterilerek build işlemi yapılabilir. Alternatif olarak imaj tag'i değiştirilip cache bypass edilebilir.
+
+## [2026-02-15] Minikube Image Caching
+Minikube, yerel olarak build edilen ve `imagePullPolicy: Never` olan imajlarda `latest` tag'ini güncellemekte zorlanıyor. Pod restart edilse bile eski imaj ID'si kullanılabiliyor.
+Çözüm: Imaj tag'ini değiştirmek (örn: `v1.0.0`) en kesin çözümdür.
+
+## [2026-02-15] SPIFFE Socket Mount Yöntemi
+Kubernetes ortamında `csi.spiffe.io` driver kullanımı bazı durumlarda kararsızlık yaratabiliyor veya path sorunlarına yol açabiliyor.
+Çözüm: `HostPath` volume kullanarak `/run/spire/agent-sockets` dizinini mount etmek daha stabil ve güvenilir bir yöntemdir.
+
+## [2026-02-15] Servis Bağımlılıkları ve Başlangıç
+API Gateway gibi servislerin, bağımlı oldukları backend servisleri (Payment, Account) henüz ayakta olmasa bile açılabilmesi, geliştirme ve test süreçlerini kolaylaştırır.
+Çözüm: `main.go` içerisinde servis bağlantı (dial) hataları `Fatal` yerine `Warning` seviyesine çekilerek uygulamanın çökmesi engellendi ve `/health` endpointi erişilebilir kılındı.

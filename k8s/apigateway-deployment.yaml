@@ -18,7 +18,7 @@ spec:
       serviceAccountName: api-gateway
       containers:
         - name: api-gateway
-          image: api-gateway:latest # Assuming local image built in Minikube env
+          image: api-gateway:v1.0.0 # Updated to bust cache
           imagePullPolicy: Never # Critical for Minikube local images
           ports:
             - containerPort: 8080
@@ -26,12 +26,12 @@ spec:
             - configMapRef:
                 name: api-gateway-config
           env:
-            # Override socket path for CSI driver mount
+            # Socket path matches what is mounted from hostPath
             - name: SPIFFE_ENDPOINT_SOCKET
-              value: "unix:///spiffe-workload-api/spire-agent.sock"
+              value: "unix:///tmp/spire-agent/public/api.sock"
           volumeMounts:
-            - name: spiffe-workload-api
-              mountPath: /spiffe-workload-api
+            - name: spire-agent-socket
+              mountPath: /tmp/spire-agent/public
               readOnly: true
           resources:
             requests:
@@ -41,7 +41,7 @@ spec:
               cpu: 500m
               memory: 512Mi
       volumes:
-        - name: spiffe-workload-api
-          csi:
-            driver: "csi.spiffe.io"
-            readOnly: true
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/agent-sockets
+            type: DirectoryOrCreate
