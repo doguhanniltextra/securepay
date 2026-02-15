@@ -28,3 +28,6 @@ target/
 .vscode/
 *.swp
 
+# Temp
+.docker_tmp/
+Microsoft.PowerShell.CoreFileSystem*
