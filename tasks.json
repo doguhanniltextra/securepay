@@ -243,7 +243,11 @@
     {
       "id": 9,
       "phase": "GitHub Break",
-      "title": "Go to @penalty.md"
+      "status": "completed",
+      "output": "git commits pushed",
+      "done_when": [
+        "ID 6, 7, 8 committed and pushed"
+      ]
     }
   ]
 }
