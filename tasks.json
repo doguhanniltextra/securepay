@@ -424,13 +424,209 @@
         "I want you to go init the Payment Service and start gRPC inside, with port 8081."
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "output": "payment-service/main.go",
       "done_when": [
         "Port 8081",
         "gRPC server started",
         "payment-service started and tested"
       ]
-    }
+    },
+    {
+      "id": 21,
+      "phase": "Payment Service",
+      "title": "Payment Service - Handler",
+      "description": [
+        "I want you to create a handler named handler.go, implement InitiatePayment, GetPayment. Make sure that you use correct gRPC server.",
+        "When GetPayment arrives: Fetch from payments.transactions table with payment_id, if not found --> return gRPC NotFound Error, if not found: return all fields"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/handler.go",
+      "done_when": [
+        "InitiatePayment handler added",
+        "GetPayment handler added",
+        "Test proto file"
+      ]
+    },
+    {
+      "id": 22,
+      "phase": "Payment Service",
+      "title": "Payment Service - Repository",
+      "description": [
+        "I want you to create a repository named repository.go, this file implements PostgreSQL operations. Make it simple as much as possible. No need for complexity for now.",
+        "Save to payments.transactions table as PENDING",
+        "Version: 1 (for optimistic locking)"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/repository.go",
+      "done_when": [
+        "The repository file gives everything that the handler needs."
+      ]
+    },
+    {
+      "id": 23,
+      "phase": "Payment Service",
+      "title": "Payment Service - Validator",
+      "description": [
+        "I want you to create a validator named validator.go",
+        "Make validation such as: amount > 0 or from_account and to_account in UUID format? Currency valid? from_account == to_account (it is forbidden)"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/validator.go",
+      "done_when": [
+        "Simple validation added"
+      ]
+    },
+    {
+      "id": 24,
+      "phase": "Payment Service",
+      "title": "Payment Service - SPIFFE Integration",
+      "description": [
+        "I want you to implement SPIFFE Integration, just like in api-gateway.",
+        "Make sure that you have valid env variable just like in api-gateway/spiffe.go",
+        "In api-gateway, you are going to see PaymentServiceCredentials, make sure that you are integrated to this function."
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/spiffe.go",
+      "done_when": [
+        "payment-service/spiffe.go is created",
+        "You have valid SPIFFE integration just like in api-gateway/spiffe.go"
+      ]
+    },
+    {
+      "id": 25,
+      "phase": "Payment Service",
+      "title": "Payment Service - Kafka",
+      "description": [
+        "topic: payment.initiated",
+        "payload: payment_id, from_account, to_account, amount, currency, timestamp"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/kafka.go",
+      "done_when": [
+        "Provide producer for notification service."
+      ]
+    },
+    {
+      "id": 26,
+      "phase": "Payment Service",
+      "title": "Payment Service - State",
+      "description": [
+        "PENDING -> COMPLETED (when account-service deducts balance)",
+        "PENDING -> FAILED (insufficient balance or operation error)"
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "payment-service/kafka.go",
+      "done_when": [
+        "Provide producer for notification service."
+      ]
+    },
+    {
+      "id": 27,
+      "phase": "Deploy to Kubernetes",
+      "title": "Create Deployment, Service, Serviceaccount, Configmap, Memory-related YAMLs for payment-service",
+      "description": [
+        "Create the YAML files mentioned in the title for payment-service inside the /k8s/payment/ folder. Also perform the necessary setup for SPIFFE/SPIRE there for payment-service. Explicitly state in the YAML which socket the certificate will be connected from, etc.",
+        "You can use k8s/api-gateway as an example folder to accomplish this task."
+      ],
+      "priority": "high",
+      "status": "pending",
+      "depends_on": [
+        16
+      ],
+      "output": "payment-service-deployment.yaml, payment-service-service.yaml, payment-service-serviceaccount.yaml, payment-service-configmap.yaml, payment-service-memory.yaml",
+      "done_when": [
+        "Deployment, Service, Serviceaccount, Configmap, Memory-related Yamls created for payment-service."
+      ]
+    },
+    {
+      "id": 28,
+      "phase": "Deploy to Kubernetes",
+      "title": "UPDATE REGISTER",
+      "description": "Copy hack/5-register-spire.sh and create a new file hack/5-1-payment-register-spire.sh and create a register for payment-service according to .ctx folder. Apply it.",
+      "priority": "high",
+      "status": "completed",
+      "output": "hack/5-1-payment-register-spire.sh",
+      "done_when": [
+        "Valid register is created for payment service",
+        "Check if register is really created"
+      ]
+    },
+    {
+      "id": 29,
+      "phase": "Deploy to Kubernetes",
+      "title": "Apply Yamls for payment service",
+      "description": "Apply the YAMLs found for payment service inside the /k8s/payment-service folder and ensure it works. Enter inside and ensure it receives SPIFFE certificate. System must work.",
+      "priority": "high",
+      "status": "completed",
+      "depends_on": [
+        28
+      ],
+      "output": "",
+      "done_when": [
+        "payment-service should reach to PostgreSQL in Kubernetes",
+        "payment-service service received SPIFFE certificate inside Kubernetes.",
+        "payment-service returned response to /health endpoint."
+      ]
+    },
+    {
+      "id": 30,
+      "phase": "Deploy to Kubernetes",
+      "title": "Check if api-gateway SPIFFE ---> payment-service SPIFFE integrated",
+      "description": [
+        "{'time':'2026-02-16T09:34:06.847525628Z','level':'WARN','msg':'Failed to connect to Payment Service (continuing without it)'','error':'failed to dial payment service: context deadline exceeded'}",
+        "This error showing us api-gateway still cant see payment-service, check this out.",
+      ],
+      "priority": "high",
+      "status": "completed",
+      "output": "",
+      "done_when": [
+        "Api-gateway initialize payment-service spiffe certificate correctly."
+      ]
+    },
+    {
+      "id": 31,
+      "phase": "Deploy to Kubernetes",
+      "title": "Create a script for helm/bitnami-kafka",
+      "description": [
+        "Create a file hack/helm-kafka.sh, add these code (this is an example, if you get any error, you can change.)",
+        "helm repo add bitnami https://charts.bitnami.com/bitnami",
+        "helm repo update",
+        "helm install secure-pay-kafka bitnami kafka set listeners.client.protocol=PLAINTEXT set listeners.controller.protocol=PLAINTEXT set listeners.interbroker.protocol=PLAINTEXT",
+        "Check if it runs --> kubectl get pods",
+        "kafka access (for an example) --> my-kafka.default.svc.cluster.local:9092",
+        "Provide this into payment-service and rebuild with new version which is 0.0.2",
+        "Make sure payment-service is running clearly."
+      ],
+      "status": "pending",
+      "output": "hack/helm-bitnami-kafka.sh",
+      "done_when": [
+        "Helm Kafka added",
+        "Kafka runs healthy",
+        "New address implemented to payment-service",
+        "Make sure payment-service is running after this implementation."
+      ]
+    },
+    {
+      "id": 32,
+      "phase": "Enrichment",
+      "title": "Enrichment Payment Service",
+      "description": [
+        "Remove hard-coded values and move them to a new file",
+        "A function should be responsible for only one thing, nothing more.",
+        "Structs should be in their own files.",
+      ],
+      "status": "pending",
+      "output": "",
+      "done_when": [
+        "wsl -d Ubuntu bash -c 'cd /home/doguhan/securepay/securepay; mkdir -p /tmp/docker-local; echo '{}' > /tmp/docker-local/config.json; export DOCKER_CONFIG=/tmp/docker-local; docker build -t payment-service:v0.0.2 -f payment-service/payment-service.dockerfile . && minikube image load payment-service:v0.0.2'"
+      ]
+    },
   ]
 }

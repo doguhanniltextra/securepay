@@ -14,7 +14,7 @@ import (
 )
 
 // PaymentServiceAddr is the address of the Payment Service.
-const PaymentServiceAddr = "payment-service:50051"
+const PaymentServiceAddr = "payment-service:8081"
 
 // AccountServiceAddr is the address of the Account Service.
 const AccountServiceAddr = "account-service:50051"

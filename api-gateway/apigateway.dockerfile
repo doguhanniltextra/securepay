@@ -9,6 +9,7 @@ COPY go.work go.work.sum ./
 # Copy module definitions
 COPY api-gateway/go.mod api-gateway/go.sum ./api-gateway/
 COPY proto/go.mod proto/go.sum ./proto/
+COPY payment-service/go.mod payment-service/go.sum ./payment-service/
 
 # Download dependencies (this might fail if go.work.sum is missing or inconsistent, but we try)
 # Alternatively, we just copy everything and build, relying on go mod tidy or vendor if present.
