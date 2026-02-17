@@ -14,11 +14,15 @@ spec:
     metadata:
       labels:
         app: api-gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
     spec:
       serviceAccountName: api-gateway
       containers:
         - name: api-gateway
-          image: api-gateway:v1.0.1 # Updated to bust cache
+          image: api-gateway:v1.0.4 # Added metrics middleware
           imagePullPolicy: Never # Critical for Minikube local images
           ports:
             - containerPort: 8080

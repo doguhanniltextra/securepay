@@ -6,6 +6,9 @@ const APIPrefix = "/api/v1/"
 // HealthCheckPath is the path for the health check endpoint.
 const HealthCheckPath = "/health"
 
+// MetricsPath is the path for Prometheus metrics.
+const MetricsPath = "/metrics"
+
 // Protected Endpoints Patterns (including HTTP Method for Go 1.22+ mux)
 
 // InitiatePaymentPathPattern is the route pattern for initiating a payment.

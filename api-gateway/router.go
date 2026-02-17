@@ -11,6 +11,8 @@ import (
 	"securepay/api-gateway/middleware"
 	accountv1 "securepay/proto/gen/go/account/v1"
 	paymentv1 "securepay/proto/gen/go/payment/v1"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // NewRouter sets up the routes and middleware for the API Gateway.
@@ -23,6 +25,9 @@ func NewRouter(paymentClient paymentv1.PaymentServiceClient, accountClient accou
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+
+	// Public Metrics Endpoint
+	mux.Handle("GET "+endpoints.MetricsPath, promhttp.Handler())
 
 	// Private API Endpoints (Middleware Applied)
 
@@ -46,10 +51,10 @@ func NewRouter(paymentClient paymentv1.PaymentServiceClient, accountClient accou
 	return mux
 }
 
-// middlewareChain applies rate limiting and JWT authentication middleware.
+// middlewareChain applies metrics, rate limiting and JWT authentication middleware.
 func middlewareChain(next http.Handler) http.Handler {
-	// Order: RateLimit (outer) -> JWT (inner) -> Handler
-	return middleware.RateLimitMiddleware(middleware.AuthMiddleware(next))
+	// Order: Metrics (outer) -> RateLimit -> JWT (inner) -> Handler
+	return middleware.MetricsMiddleware(middleware.RateLimitMiddleware(middleware.AuthMiddleware(next)))
 }
 
 func handleInitiatePayment(w http.ResponseWriter, r *http.Request, client paymentv1.PaymentServiceClient) {
