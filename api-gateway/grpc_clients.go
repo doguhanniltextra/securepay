@@ -17,7 +17,7 @@ import (
 const PaymentServiceAddr = "payment-service:8081"
 
 // AccountServiceAddr is the address of the Account Service.
-const AccountServiceAddr = "account-service:50051"
+const AccountServiceAddr = "account-service:8082"
 
 // NewPaymentServiceClient creates a new gRPC client for the Payment Service.
 // It uses SPIFFE-based mTLS for secure communication.
@@ -29,13 +29,13 @@ func NewPaymentServiceClient(ctx context.Context, source *workloadapi.X509Source
 	}
 
 	// Dial the Payment Service using gRPC with mTLS.
-	// Blocks until connection is established or context times out.
-	conn, err := grpc.DialContext(ctx, PaymentServiceAddr, creds, grpc.WithBlock())
+	// Returns immediately (async connection).
+	conn, err := grpc.DialContext(ctx, PaymentServiceAddr, creds)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial payment service: %w", err)
 	}
 
-	slog.Info("Connected to Payment Service", "address", PaymentServiceAddr)
+	slog.Info("Initialized Payment Service Client (async connect)", "address", PaymentServiceAddr)
 
 	// Create and return the generated gRPC client.
 	client := paymentv1.NewPaymentServiceClient(conn)
@@ -52,13 +52,13 @@ func NewAccountServiceClient(ctx context.Context, source *workloadapi.X509Source
 	}
 
 	// Dial the Account Service using gRPC with mTLS.
-	// Blocks until connection is established or context times out.
-	conn, err := grpc.DialContext(ctx, AccountServiceAddr, creds, grpc.WithBlock())
+	// Returns immediately (async connection).
+	conn, err := grpc.DialContext(ctx, AccountServiceAddr, creds)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial account service: %w", err)
 	}
 
-	slog.Info("Connected to Account Service", "address", AccountServiceAddr)
+	slog.Info("Initialized Account Service Client (async connect)", "address", AccountServiceAddr)
 
 	// Create and return the generated gRPC client.
 	client := accountv1.NewAccountServiceClient(conn)
