@@ -1,0 +1,29 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: secure-pay-kafka.default.svc.cluster.local:9092
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.securepay.notification.model.PaymentEvent
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+
+
+logging:
+  level:
+    root: INFO
+    com.securepay.notification: DEBUG
