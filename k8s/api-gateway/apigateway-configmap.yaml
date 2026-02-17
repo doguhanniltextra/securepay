@@ -11,5 +11,5 @@ data:
   # Application Port
   PORT: "8080"
   # Service Connection Details (gRPC)
-  PAYMENT_SERVICE_ADDR: "payment-service:50051"
-  ACCOUNT_SERVICE_ADDR: "account-service:50051"
+  PAYMENT_SERVICE_ADDR: "payment-service:8081"
+  ACCOUNT_SERVICE_ADDR: "account-service:8082"
