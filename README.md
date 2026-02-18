@@ -55,6 +55,13 @@ make test
 # This runs scripts/test_payment.sh
 ```
 
+## Screenshots
+
+![Get-Pods](./images/get-pods.png)
+![Get-Tails](./images/tail.png)
+![Prometheus-Grafana](./images/prometheus-grafana.png)
+![Jaeger](./images/jaeger.png)
+
 ## 📚 Documentation
 For detailed architecture, API specs, and design decisions, see the [local documentation site](docs/index.html).
 
