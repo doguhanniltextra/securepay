@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C4 Models | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#0f172a',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#0f172a',
+                lineColor: '#3b82f6',
+                secondaryColor: '#334155',
+                tertiaryColor: '#f8fafc'
+            }
+        });
+    </script>
+    <style>
+        .mermaid {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-number {
+            background: var(--accent-color);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html" class="active"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html"><i class="fas fa-network-wired"></i> Infrastructure</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1>C4 Model Diagrams</h1>
+            <p>Visualizing the SecurePay system hierarchy and interaction flow.</p>
+        </header>
+
+        <section>
+            <h2>Level 1: System Context Diagram</h2>
+            <p class="typography">The high-level view of how SecurePay interacts with users and external entities.</p>
+            <div class="mermaid">
+                graph TD
+                User([Customer]) -- Uses --> SP[SecurePay System]
+                SP -- Sends Notifications --> Email[External Email System]
+                SP -- Verifies Identity --> IDP[External Auth Provider]
+
+                style SP fill:#0f172a,color:#fff,stroke:#3b82f6,stroke-width:2px
+            </div>
+        </section>
+
+        <section>
+            <h2>Level 2: Container Diagram</h2>
+            <p class="typography">The microservices architecture, data stores, and message brokers within the SecurePay
+                boundary.</p>
+            <div class="mermaid">
+                graph TB
+                subgraph SecurePay_Boundary [SecurePay System]
+                AGW[API Gateway - Go] -- gRPC/mTLS --> PS[Payment Service - Go]
+                AGW -- gRPC/mTLS --> AS[Account Service - Go]
+                PS -- gRPC/mTLS --> AS
+                PS -- Publishes Events --> Kafka[(Kafka Broker)]
+                AS -- Consumes Events --> Kafka
+                NS[Notification Service - Java] -- Consumes Events --> Kafka
+
+                PS -- Persistent Storage --> PDB[(PostgreSQL)]
+                AS -- Persistent Storage --> PDB
+                AS -- Caching --> Redis[(Redis Cache)]
+                PS -- Idempotency --> Redis
+
+                SPIRE[SPIRE Server] -. Issues SVIDs .-> AGW
+                SPIRE -. Issues SVIDs .-> PS
+                SPIRE -. Issues SVIDs .-> AS
+                end
+
+                User([Customer]) -- HTTPS/JWT --> AGW
+                NS -- Logs/Mock --> Email[Email System]
+
+                style AGW fill:#1e293b,color:#fff
+                style PS fill:#1e293b,color:#fff
+                style AS fill:#1e293b,color:#fff
+                style NS fill:#1e293b,color:#fff
+                style PDB fill:#334155,color:#fff
+                style Redis fill:#334155,color:#fff
+                style Kafka fill:#334155,color:#fff
+                style SPIRE fill:#475569,color:#fff,stroke-dasharray: 5 5
+            </div>
+        </section>
+
+        <section>
+            <h2>Infrastructure: Kubernetes Deployment Diagram</h2>
+            <p class="typography">The mapping of containers to Kubernetes resources across different namespaces.</p>
+            <div class="mermaid">
+                graph TB
+                subgraph K8s_Cluster [Kubernetes Cluster / Minikube]
+                subgraph NS_Spire [Namespace: spire]
+                SS[SPIRE Server]
+                SA[SPIRE Agent]
+                end
+
+                subgraph NS_Default [Namespace: default]
+                subgraph Pod_AGW [Pod: api-gateway]
+                C_AGW[Container: Go App]
+                S_AGW[Sidecar: Spire Agent]
+                end
+
+                subgraph Pod_PS [Pod: payment-service]
+                C_PS[Container: Go App]
+                S_PS[Sidecar: Spire Agent]
+                end
+
+                subgraph Pod_AS [Pod: account-service]
+                C_AS[Container: Go App]
+                S_AS[Sidecar: Spire Agent]
+                end
+
+                subgraph Pod_NS [Pod: notification-service]
+                C_NS[Container: Java App]
+                end
+
+                subgraph Pod_Kafka [Pod: Kafka]
+                DB_Kafka[(Kafka Topic)]
+                end
+
+                subgraph Pod_Redis [Pod: Redis]
+                DB_Redis[(Redis Cache)]
+                end
+
+                subgraph Pod_DB [Pod: Postgres]
+                DB_PG[(PG Data)]
+                end
+                end
+                end
+
+                SA -- Health Check --> SS
+                S_AGW -. SVID .-> SA
+                S_PS -. SVID .-> SA
+                S_AS -. SVID .-> SA
+
+                C_AGW -- gRPC/mTLS --> C_PS
+                C_PS -- Events --> DB_Kafka
+                DB_Kafka -- Events --> C_AS
+
+                style NS_Spire fill:#f1f5f9,stroke:#64748b,stroke-dasharray: 5 5
+                style NS_Default fill:#f8fafc,stroke:#3b82f6
+                style Pod_AGW fill:#fff,stroke:#1e293b
+                style Pod_PS fill:#fff,stroke:#1e293b
+                style Pod_AS fill:#fff,stroke:#1e293b
+                style Pod_NS fill:#fff,stroke:#1e293b
+            </div>
+        </section>
+
+        <section>
+            <h2>The Detailed Payment Flow</h2>
+            <div class="card" style="margin-top: 2rem;">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>External Request:</strong> The Customer initiates a payment via the Mobile/Web App,
+                        sending a POST request to <code>/v1/payments</code> with a Bearer JWT.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>API Gateway:</strong> Validates the JWT, checks rate limits, and looks up the target
+                        service. It uses a <strong>SPIFFE SVID</strong> to establish an mTLS connection to the Payment
+                        Service.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Idempotency Check:</strong> The Payment Service checks <strong>Redis</strong> using the
+                        <code>Idempotency-Key</code> from the header to ensure the request hasn't been processed
+                        already.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <strong>Balance Validation:</strong> Payment Service calls the Account Service via gRPC to
+                        verify funds. Account Service checks <strong>Redis</strong> (Read-Aside) first, then falls back
+                        to <strong>PostgreSQL</strong>.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div>
+                        <strong>Transaction Initialization:</strong> Payment Service records the transaction in its
+                        schema as <code>PENDING</code> and returns an immediate response to the Gateway.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">6</div>
+                    <div>
+                        <strong>Event Bus:</strong> Payment Service publishes a <code>PaymentInitiated</code> event to
+                        the <strong>Kafka</strong> topic.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-number">7</div>
+                    <div>
+                        <strong>Asynchronous Processing:</strong>
+                        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                            <li><strong>Account Service</strong> consumes the event, updates balances in DB using
+                                <strong>Optimistic Locking</strong>, and clears the Redis cache.
+                            </li>
+                            <li><strong>Notification Service</strong> consumes the event and triggers an alert for the
+                                user.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

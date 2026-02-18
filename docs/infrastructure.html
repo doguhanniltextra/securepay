@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html" class="active"><i class="fas fa-network-wired"></i> Infrastructure</a>
+            </li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header>
+            <h1>Cloud Architecture</h1>
+            <p>Production-grade infrastructure as code on AWS.</p>
+        </header>
+
+        <section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+            <!-- VPC -->
+            <article class="card">
+                <h3><i class="fas fa-network-wired"></i> AWS VPC</h3>
+                <span class="status-badge status-completed">Completed</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>CIDR:</strong> 10.0.0.0/16</p>
+                    <p><strong>Subnets:</strong> 3 Public, 3 Private (Multi-AZ)</p>
+                    <p><strong>Gateways:</strong> Internet Gateway (IGW) for public subnets, NAT Gateway for private
+                        outbound.</p>
+                </div>
+            </article>
+
+            <!-- EKS -->
+            <article class="card">
+                <h3><i class="fas fa-server"></i> EKS Cluster</h3>
+                <span class="status-badge status-completed">Completed</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Version:</strong> Kubernetes 1.28</p>
+                    <p><strong>Node Group:</strong> Managed, t3.medium, Auto-scaling (1-3 nodes)</p>
+                    <p><strong>IAM:</strong> IRSA (IAM Roles for Service Accounts) with OIDC provider.</p>
+                </div>
+            </article>
+
+            <!-- RDS -->
+            <article class="card">
+                <h3><i class="fas fa-database"></i> Amazon RDS</h3>
+                <span class="status-badge status-completed">Completed</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Engine:</strong> PostgreSQL 16</p>
+                    <p><strong>Instance:</strong> db.t3.micro</p>
+                    <p><strong>Storage:</strong> 20GB gp3 (Encrypted)</p>
+                    <p><strong>Security:</strong> Accessible only from EKS Node Security Group (Port 5432).</p>
+                </div>
+            </article>
+
+            <!-- MSK -->
+            <article class="card">
+                <h3><i class="fas fa-project-diagram"></i> Amazon MSK</h3>
+                <span class="status-badge status-completed">Completed</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Engine:</strong> Apache Kafka 3.5.1</p>
+                    <p><strong>Brokers:</strong> 3 Nodes (kafka.t3.small)</p>
+                    <p><strong>Encryption:</strong> TLS in transit, KMS at rest.</p>
+                </div>
+            </article>
+
+            <!-- ElastiCache -->
+            <article class="card">
+                <h3><i class="fas fa-memory"></i> ElastiCache</h3>
+                <span class="status-badge status-completed">Completed</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Engine:</strong> Redis 7.0</p>
+                    <p><strong>Instance:</strong> cache.t3.micro</p>
+                    <p><strong>Security:</strong> AUTH token enabled, Private Subnet placement.</p>
+                </div>
+            </article>
+        </section>
+
+        <section>
+            <h2><i class="fas fa-hammer"></i> Local Development</h2>
+            <div
+                style="background: white; border-radius: 0.5rem; border: 1px solid var(--border-color); margin-top: 1rem; overflow: hidden; padding: 1.5rem;">
+                <p>For local testing on WSL, we replicate the AWS environment using:</p>
+                <ul style="margin-top: 1rem; padding-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Minikube</strong> (Docker Driver) simulating EKS.</li>
+                    <li><strong>Helm Charts</strong> for PostgreSQL, Kafka (Bitnami), Redis, and Jaeger.</li>
+                    <li><strong>SPIRE Server</strong> deployed via Helm for identity management.</li>
+                    <li><strong>Port Forwarding</strong> for accessing services (Jaeger UI, etc.).</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+</body>
+
+</html>

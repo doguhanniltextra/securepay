@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html" class="active"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html"><i class="fas fa-network-wired"></i> Infrastructure</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header>
+            <h1>System Architecture</h1>
+            <p>Zero-Trust, Event-Driven, Polyglot Microservices.</p>
+        </header>
+
+        <section style="margin-bottom: 3rem;">
+            <h2><i class="fas fa-layer-group"></i> Architectural Layers</h2>
+            <div class="card-grid" style="margin-top: 1.5rem;">
+                <article class="card">
+                    <h4>Layer 1: External Access</h4>
+                    <p><strong>Client &#8594; API Gateway</strong></p>
+                    <p>HTTP/REST with JWT Authentication. Only the API Gateway is exposed to the public internet.</p>
+                </article>
+                <article class="card">
+                    <h4>Layer 2: Inter-Service (Zero Trust)</h4>
+                    <p><strong>Payment &#8596; Account</strong></p>
+                    <p>gRPC with mTLS via SPIFFE/SPIRE. No static credentials (passwords/API keys) used for
+                        service-to-service auth.</p>
+                </article>
+                <article class="card">
+                    <h4>Layer 3: Async Event Bus</h4>
+                    <p><strong>Payment &#8594; Kafka &#8594; Account/Notify</strong></p>
+                    <p>Asynchronous decoupling using Kafka topics. Ensures resilience and scalability.</p>
+                </article>
+            </div>
+        </section>
+
+        <section style="margin-bottom: 3rem;">
+            <h2><i class="fas fa-exchange-alt"></i> Detailed Payment Flow</h2>
+            <div
+                style="background: white; border-radius: 0.5rem; border: 1px solid var(--border-color); padding: 1.5rem;">
+                <ol style="padding-left: 1.5rem; line-height: 1.8;">
+                    <li><strong>Client</strong> sends <code>POST /payments</code> to API Gateway (JWT required).</li>
+                    <li><strong>API Gateway</strong> validates token, rate-limits, and forwards via gRPC to Payment
+                        Service (mTLS).</li>
+                    <li><strong>Payment Service</strong> calls Account Service (gRPC) to check balance.</li>
+                    <li><strong>Account Service</strong> checks <strong>Redis</strong> cache (Read-Aside). If miss,
+                        checks PostgreSQL.</li>
+                    <li>If balance sufficient, Payment Service saves transaction as <code>PENDING</code> in DB.</li>
+                    <li>Payment Service publishes <code>payment.initiated</code> event to <strong>Kafka</strong>.</li>
+                    <li><strong>Account Service</strong> consumes event:
+                        <ul>
+                            <li>Deducts balance in PostgreSQL transaction (Optimistic Locking).</li>
+                            <li>Invalidates Redis cache keys.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Notification Service</strong> consumes event and logs notification.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2><i class="fas fa-database"></i> Data Model</h2>
+            <div class="card-grid" style="margin-top: 1.5rem;">
+                <article class="card">
+                    <h4>Payments Schema</h4>
+                    <code>payments.transactions</code>
+                    <ul style="margin-top: 0.5rem; padding-left: 1rem;">
+                        <li>id (UUID)</li>
+                        <li>from_account (UUID)</li>
+                        <li>to_account (UUID)</li>
+                        <li>amount (Numeric)</li>
+                        <li>status (Enum: PENDING, COMPLETED, FAILED)</li>
+                        <li>idempotency_key (Unique)</li>
+                    </ul>
+                </article>
+                <article class="card">
+                    <h4>Accounts Schema</h4>
+                    <code>accounts.balances</code>
+                    <ul style="margin-top: 0.5rem; padding-left: 1rem;">
+                        <li>account_id (UUID)</li>
+                        <li>balance (Numeric)</li>
+                        <li>currency (VARCHAR)</li>
+                        <li>version (Int - Optimistic Lock)</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

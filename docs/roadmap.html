@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: var(--border-color);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+
+        .container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: white;
+            border: 4px solid var(--accent-color);
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .left {
+            left: 0;
+        }
+
+        .right {
+            left: 50%;
+        }
+
+        .left::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            right: 30px;
+            border: medium solid white;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent white;
+        }
+
+        .right::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            left: 30px;
+            border: medium solid white;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent white transparent transparent;
+        }
+
+        .right::after {
+            left: -16px;
+        }
+
+        .content {
+            padding: 20px 30px;
+            background-color: white;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html" class="active"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html"><i class="fas fa-network-wired"></i> Infrastructure</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header>
+            <h1>Project Timeline</h1>
+            <p>Development milestones and current progress.</p>
+        </header>
+
+        <div class="timeline">
+            <div class="container left">
+                <div class="content">
+                    <h2>Phase 1: Foundation</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Initialized API Gateway, SPIFFE/SPIRE mTLS, and project structure.</p>
+                    <ul>
+                        <li>gRPC Proto Definitions</li>
+                        <li>JWT Middleware</li>
+                        <li>Rate Limiting</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container right">
+                <div class="content">
+                    <h2>Phase 2: Kubernetes Deployment</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Deployed services to Minikube using Helm charts and manifests.</p>
+                    <ul>
+                        <li>Minikube Setup</li>
+                        <li>Helm Installation</li>
+                        <li>SPIRE Registration</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container left">
+                <div class="content">
+                    <h2>Phase 3: Core Services</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Implemented Payment and Account services with business logic.</p>
+                    <ul>
+                        <li>Payment Handling (gRPC)</li>
+                        <li>Account Balances (PostgreSQL)</li>
+                        <li>Event-Driven Architecture (Kafka)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container right">
+                <div class="content">
+                    <h2>Phase 4: Data & Caching</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Integrated persistent storage and caching layers.</p>
+                    <ul>
+                        <li>PostgreSQL Migration</li>
+                        <li>Redis Idempotency Check</li>
+                        <li>Read-Aside Caching</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container left">
+                <div class="content">
+                    <h2>Phase 5: Observability</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Implemented distributed tracing and metrics.</p>
+                    <ul>
+                        <li>Jaeger Deployment</li>
+                        <li>OpenTelemetry Instrumentation</li>
+                        <li>Prometheus & Grafana Setup</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container right">
+                <div class="content">
+                    <h2>Phase 6: Infrastructure as Code</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Terraform modules for AWS production environment.</p>
+                    <ul>
+                        <li>VPC, EKS, RDS, MSK, ElastiCache Modules</li>
+                        <li>Dev Environment Configuration</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container left">
+                <div class="content">
+                    <h2>Phase 7: CI/CD & Docs</h2>
+                    <span class="status-badge status-completed">Completed</span>
+                    <p>Automated build pipelines and comprehensive documentation.</p>
+                    <ul>
+                        <li>GitHub Actions (Lint, Test, Build)</li>
+                        <li>Final Project Documentation</li>
+                        <li>CV Preparation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

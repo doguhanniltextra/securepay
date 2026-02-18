@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conventions | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html" class="active"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html"><i class="fas fa-network-wired"></i> Infrastructure</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header>
+            <h1>Coding Standards</h1>
+            <p>Project rules, patterns, and conventions.</p>
+        </header>
+
+        <section class="typography">
+            <h2><i class="fas fa-code-branch"></i> Git Workflow</h2>
+            <p><strong>Conventional Commits:</strong> All commits must follow the Conventional Commits specification.
+            </p>
+            <pre><code>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+
+&lt;body&gt;</code></pre>
+            <p>Allowed Types: <code>feat</code>, <code>fix</code>, <code>docs</code>, <code>style</code>,
+                <code>refactor</code>, <code>test</code>, <code>chore</code>.
+            </p>
+            <p>Scopes: <code>payment-service</code>, <code>account-service</code>, <code>api-gateway</code>,
+                <code>helm</code>, <code>ci</code>.
+            </p>
+        </section>
+
+        <section class="typography">
+            <h2><i class="fas fa-terminal"></i> Shell Commands</h2>
+            <p><strong>NO Chaining:</strong> The <code>&&</code> operator is strictly forbidden due to PowerShell
+                compatibility issues in WSL.</p>
+            <p><strong>Correct:</strong></p>
+            <pre><code>command1
+command2</code></pre>
+            <p><strong>Incorrect:</strong></p>
+            <pre><code>command1 && command2</code></pre>
+
+            <p><strong>NO Filtering Tools:</strong> Do not use <code>grep</code>, <code>awk</code>, or <code>sed</code>
+                for checking command output. Use native tool formatting (e.g., <code>kubectl -o json</code>).</p>
+        </section>
+
+        <section class="typography">
+            <h2><i class="fas fa-file-code"></i> Go Code Style</h2>
+            <p><strong>Error Handling:</strong> Always wrap errors with context. Never panic.</p>
+            <pre><code>if err != nil {
+    return fmt.Errorf("context: %w", err)
+}</code></pre>
+
+            <p><strong>Logging:</strong> Use <code>log/slog</code> for structured logging over <code>fmt.Println</code>.
+                Include <code>trace_id</code> in every log entry.</p>
+
+            <p><strong>File Structure:</strong></p>
+            <ul>
+                <li><code>handler.go</code>: Request handling</li>
+                <li><code>repository.go</code>: Database access</li>
+                <li><code>service.go</code>: Business logic</li>
+                <li><code>telemetry.go</code>: OpenTelemetry setup</li>
+            </ul>
+        </section>
+
+        <section class="typography">
+            <h2><i class="fas fa-key"></i> Security</h2>
+            <p><strong>Secrets:</strong> NO hardcoded secrets in code. Use Kubernetes Secrets or Environment Variables.
+            </p>
+            <p><strong>Identity:</strong> Use SPIFFE SVIDs for mTLS authentication. No static API keys between services.
+            </p>
+        </section>
+
+    </main>
+</body>
+
+</html>

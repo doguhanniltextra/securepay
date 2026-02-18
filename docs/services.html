@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services | SecurePay Docs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-shield-alt"></i> <span>SecurePay</span> Docs</div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-tasks"></i> Roadmap Status</a></li>
+            <li><a href="architecture.html"><i class="fas fa-sitemap"></i> Architecture</a></li>
+            <li><a href="c4.html"><i class="fas fa-project-diagram"></i> C4 Models</a></li>
+            <li><a href="services.html" class="active"><i class="fas fa-server"></i> Services & Ports</a></li>
+            <li><a href="conventions.html"><i class="fas fa-code"></i> Conventions</a></li>
+            <li><a href="infrastructure.html"><i class="fas fa-network-wired"></i> Infrastructure</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header>
+            <h1>Microservices & Ports</h1>
+            <p>Overview of the 4 core microservices and supporting infrastructure components.</p>
+        </header>
+
+        <section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+            <!-- API Gateway -->
+            <article class="card">
+                <h3><i class="fas fa-door-open"></i> API Gateway</h3>
+                <span class="status-badge status-completed">Go 1.24</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Port:</strong> 8080 (HTTP)</p>
+                    <p><strong>Role:</strong> Entry point for external traffic. Handles JWT verification, rate limiting,
+                        and request routing.</p>
+                    <p><strong>Dependencies:</strong> Payment Service, Account Service, SPIRE Agent, Jaeger.</p>
+                </div>
+            </article>
+
+            <!-- Payment Service -->
+            <article class="card">
+                <h3><i class="fas fa-money-bill-wave"></i> Payment Service</h3>
+                <span class="status-badge status-completed">Go 1.24</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Port:</strong> 8081 (gRPC)</p>
+                    <p><strong>Role:</strong> Orchestrates payment flow. Validates requests, ensures idempotency, and
+                        publishes events.</p>
+                    <p><strong>Dependencies:</strong> Account Service, Kafka, PostgreSQL, Redis, SPIRE Agent.</p>
+                </div>
+            </article>
+
+            <!-- Account Service -->
+            <article class="card">
+                <h3><i class="fas fa-wallet"></i> Account Service</h3>
+                <span class="status-badge status-completed">Go 1.24</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Port:</strong> 50051 (gRPC)</p>
+                    <p><strong>Role:</strong> Manages user balances. Handles transactional updates and read-heavy
+                        operations.</p>
+                    <p><strong>Dependencies:</strong> PostgreSQL, Redis, Kafka Consumer, SPIRE Agent.</p>
+                </div>
+            </article>
+
+            <!-- Notification Service -->
+            <article class="card">
+                <h3><i class="fas fa-bell"></i> Notification Service</h3>
+                <span class="status-badge status-pending">Java 21 / Spring Boot</span>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Port:</strong> 8083 (HTTP)</p>
+                    <p><strong>Role:</strong> Consumes payment events and sends notifications (mocked logging).</p>
+                    <p><strong>Dependencies:</strong> Kafka Consumer, Jaeger.</p>
+                </div>
+            </article>
+        </section>
+
+        <section>
+            <h2><i class="fas fa-cubes"></i> Infrastructure Components</h2>
+            <div
+                style="background: white; border-radius: 0.5rem; border: 1px solid var(--border-color); margin-top: 1rem; overflow: hidden;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Type</th>
+                            <th>Port</th>
+                            <th>Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>PostgreSQL</strong></td>
+                            <td>Database</td>
+                            <td>5432</td>
+                            <td>Primary data store (Payments & Accounts schemas).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Apache Kafka</strong></td>
+                            <td>Message Broker</td>
+                            <td>9092</td>
+                            <td>Asynchronous event bus for decouping services.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redis</strong></td>
+                            <td>Cache</td>
+                            <td>6379</td>
+                            <td>Idempotency keys and balance caching.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SPIRE Server</strong></td>
+                            <td>Identity Provider</td>
+                            <td>8081</td>
+                            <td>Issues SVIDs for mTLS authentication.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Jaeger</strong></td>
+                            <td>Observability</td>
+                            <td>16686 (UI) / 4317 (OTLP)</td>
+                            <td>Distributed tracing visualization.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
