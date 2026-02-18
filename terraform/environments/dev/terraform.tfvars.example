@@ -1,0 +1,5 @@
+project_name = "securepay"
+environment  = "dev"
+region       = "us-east-1"
+db_password  = "ChangeThisStrongPassword123!"
+vpc_cidr     = "10.0.0.0/16"

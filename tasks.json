@@ -867,7 +867,7 @@
         "Test: Initiate payment via API Gateway, verify full trace in Jaeger"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         38,
         39
@@ -900,7 +900,7 @@
         "Test: Full payment flow, verify trace includes Account Service spans"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         38,
         40
@@ -934,7 +934,7 @@
         "Test: Full flow, verify Notification Service appears in Jaeger trace"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         38,
         41
@@ -968,7 +968,7 @@
         "Add script to README.md under 'Testing' section"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         36,
         37,
@@ -1002,7 +1002,7 @@
         "Purpose: Demonstrate production-ready IaC skills for CV"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         43
       ],
@@ -1031,7 +1031,7 @@
         "Add detailed comments explaining each resource"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         44
       ],
@@ -1062,7 +1062,7 @@
         "Document SPIRE deployment compatibility in comments"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         45
       ],
@@ -1094,7 +1094,7 @@
         "Add comment explaining schema separation (payments, accounts) done via SQL init scripts"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         46
       ],
@@ -1126,7 +1126,7 @@
         "Document consumer groups in comments"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         46
       ],
@@ -1158,7 +1158,7 @@
         "Document TTL strategies in comments"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         46
       ],
@@ -1191,7 +1191,7 @@
         "- Note: 'This is demonstration IaC, not applied due to free tier limits'"
       ],
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         45,
         46,
@@ -1209,249 +1209,6 @@
     },
     {
       "id": 51,
-      "phase": "Terraform - Documentation",
-      "title": "Create Comprehensive Terraform Documentation",
-      "description": [
-        "Update terraform/README.md with:",
-        "- Project overview: 'Production-ready IaC for SecurePay deployment on AWS EKS'",
-        "- Module descriptions (VPC, EKS, RDS, MSK, ElastiCache)",
-        "- Architecture diagram (text-based ASCII or reference to architecture.md)",
-        "- Prerequisites: Terraform version, AWS CLI, kubectl",
-        "- How to use: terraform init, plan, apply commands (with warning: DO NOT APPLY)",
-        "- Estimated monthly cost breakdown for all resources",
-        "- Migration path from Minikube to EKS (helm chart adaptations needed)",
-        "- Security considerations: encryption, IAM policies, security groups",
-        "- Comparison table: Local (Minikube, PostgreSQL in K8s, Kafka in K8s) vs Production (EKS, RDS, MSK, ElastiCache)",
-        "- Add to .ctx/decisions.md:",
-        "Decision: Why EKS over ECS (Kubernetes-native project, SPIRE compatibility)",
-        "Decision: Why managed services (RDS, MSK, ElastiCache) over self-hosted (operational simplicity)",
-        "Update main project README.md:",
-        "- Add 'Production Deployment' section referencing terraform/ directory",
-        "- Link to terraform/README.md"
-      ],
-      "priority": "medium",
-      "status": "pending",
-      "depends_on": [
-        50
-      ],
-      "output": "terraform/README.md, updated .ctx/decisions.md, updated project README.md",
-      "done_when": [
-        "Comprehensive Terraform documentation",
-        "Architecture diagram",
-        "Cost estimation",
-        "Architectural decision records updated",
-        "Main README references Terraform deployment"
-      ]
-    },
-    {
-      "id": 52,
-      "phase": "CI/CD - Lint",
-      "title": "Implement Linting in GitHub Actions",
-      "description": [
-        "Create .github/workflows/lint.yml",
-        "Job 1: golangci-lint for Go services (api-gateway, payment-service, account-service)",
-        "- Use golangci/golangci-lint-action@v3",
-        "- Run on: pull_request, push to main",
-        "- Lint each service directory separately",
-        "Create .golangci.yml in project root:",
-        "- Enable linters: gofmt, goimports, govet, errcheck, staticcheck, unused, gosimple",
-        "- Set timeout: 5m",
-        "Job 2: checkstyle for Java Notification Service",
-        "- Use maven checkstyle plugin",
-        "- Run: mvn checkstyle:check in notification-service/",
-        "Create notification-service/checkstyle.xml with Google Java Style checks",
-        "Both jobs must pass for PR to be mergeable",
-        "Add badge to README.md: [![Lint](badge-url)](workflow-url)"
-      ],
-      "priority": "high",
-      "status": "pending",
-      "depends_on": [
-        43
-      ],
-      "output": ".github/workflows/lint.yml, .golangci.yml, notification-service/checkstyle.xml",
-      "done_when": [
-        "lint.yml workflow created",
-        "golangci-lint runs on all Go services",
-        "checkstyle runs on Java service",
-        "Workflow badge added to README"
-      ]
-    },
-    {
-      "id": 53,
-      "phase": "CI/CD - Test",
-      "title": "Implement Unit Testing in GitHub Actions",
-      "description": [
-        "Create .github/workflows/test.yml",
-        "Job: Go unit tests for all Go services",
-        "- Run: go test -v -race -coverprofile=coverage.out ./...",
-        "- Run in each service directory (api-gateway, payment-service, account-service)",
-        "- Upload coverage report using codecov/codecov-action or coverallsapp/github-action",
-        "Coverage threshold: Warn if below 50%, fail if below 30% (adjustable)",
-        "Write unit tests (minimum coverage for critical paths):",
-        "- payment-service/internal/validator/validator_test.go (test ValidateInitiatePayment)",
-        "- payment-service/internal/repository/repository_test.go (use testcontainers for PostgreSQL or mock)",
-        "- account-service/internal/repository/repository_test.go",
-        "- api-gateway/middleware/jwt_test.go (test token validation)",
-        "Job should run on: pull_request, push to main",
-        "Add coverage badge to README.md"
-      ],
-      "priority": "high",
-      "status": "pending",
-      "depends_on": [
-        52
-      ],
-      "output": ".github/workflows/test.yml, *_test.go files",
-      "done_when": [
-        "test.yml workflow created",
-        "Unit tests written for critical paths (validator, repository, middleware)",
-        "Coverage report generated and uploaded",
-        "Coverage badge added to README"
-      ]
-    },
-    {
-      "id": 54,
-      "phase": "CI/CD - Security",
-      "title": "Implement Security Scanning in GitHub Actions",
-      "description": [
-        "Create .github/workflows/security.yml",
-        "Job 1: Trivy container image scan",
-        "- Use aquasecurity/trivy-action@master",
-        "- Scan all Docker images (api-gateway, payment-service, account-service, notification-service)",
-        "- Scan for: OS vulnerabilities, application dependencies vulnerabilities",
-        "- Severity: Fail on HIGH and CRITICAL, warn on MEDIUM",
-        "- Upload results to GitHub Security tab (SARIF format)",
-        "Job 2: gosec for Go static security analysis",
-        "- Use securego/gosec",
-        "- Run on all Go services",
-        "- Check for: hardcoded credentials, weak crypto, SQL injection patterns, etc.",
-        "Job 3: OWASP Dependency-Check for Java (optional, can be slow)",
-        "- Run: mvn org.owasp:dependency-check-maven:check",
-        "- Check notification-service dependencies",
-        "Run on: pull_request, push to main, scheduled (weekly)",
-        "Add security badge to README.md"
-      ],
-      "priority": "medium",
-      "status": "pending",
-      "depends_on": [
-        53
-      ],
-      "output": ".github/workflows/security.yml",
-      "done_when": [
-        "security.yml workflow created",
-        "Trivy scans all Docker images",
-        "gosec scans Go code",
-        "Security findings uploaded to GitHub Security tab",
-        "Security badge added to README"
-      ]
-    },
-    {
-      "id": 55,
-      "phase": "CI/CD - Build",
-      "title": "Implement Docker Multi-Platform Build in GitHub Actions",
-      "description": [
-        "Create .github/workflows/build.yml",
-        "Job: Build and push Docker images",
-        "- Trigger on: push to main, tags (v*)",
-        "- Use docker/build-push-action@v5",
-        "- Setup Docker Buildx for multi-platform builds",
-        "- Build for: linux/amd64, linux/arm64 (optional, adds build time)",
-        "- Tag strategy: latest (on main), semantic version (on tags v*)",
-        "- Push to Docker Hub (requires DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets)",
-        "- Build all services: api-gateway, payment-service, account-service, notification-service",
-        "- Use cache to speed up builds (type=gha)",
-        "Create docker/build-context.sh helper script if needed",
-        "Add note in README: Images available at dockerhub.com/u/securepay (or your username)",
-        "For CV purposes, can also push to GitHub Container Registry (ghcr.io)"
-      ],
-      "priority": "medium",
-      "status": "pending",
-      "depends_on": [
-        54
-      ],
-      "output": ".github/workflows/build.yml",
-      "done_when": [
-        "build.yml workflow created",
-        "Multi-platform Docker builds",
-        "Images pushed to registry on main/tags",
-        "Cache strategy implemented for faster builds",
-        "Registry information documented in README"
-      ]
-    },
-    {
-      "id": 56,
-      "phase": "CI/CD - Helm Validation",
-      "title": "Implement Helm Chart Validation",
-      "description": [
-        "Create .github/workflows/helm-validate.yml",
-        "Job: Validate Helm charts and Kubernetes manifests",
-        "- Use azure/setup-helm to install Helm CLI",
-        "- Run: helm lint on any Helm charts (if you create charts later)",
-        "- Run: kubectl --dry-run=client -f k8s/ to validate YAML syntax",
-        "- Use kubeconform or kubeval to validate Kubernetes schema compliance",
-        "- Check for: invalid API versions, missing required fields, deprecated resources",
-        "Run on: pull_request, push to main",
-        "Optional: Add kustomize validation if you use kustomize overlays",
-        "Add validation badge to README"
-      ],
-      "priority": "low",
-      "status": "pending",
-      "depends_on": [
-        55
-      ],
-      "output": ".github/workflows/helm-validate.yml",
-      "done_when": [
-        "helm-validate.yml workflow created",
-        "Helm lint and kubectl dry-run validations",
-        "Schema validation with kubeconform",
-        "Badge added to README"
-      ]
-    },
-    {
-      "id": 57,
-      "phase": "Documentation - Final",
-      "title": "Complete Project Documentation",
-      "description": [
-        "Update main README.md with:",
-        "- Project overview and architecture summary",
-        "- Prerequisites (Go, Docker, Kubernetes, Helm, Terraform)",
-        "- Local development setup (Minikube, PostgreSQL, Kafka, Redis, Jaeger)",
-        "- Quick start guide (step-by-step from zero to running)",
-        "- Testing section (unit tests, e2e tests, how to run)",
-        "- CI/CD badges (lint, test, security, build)",
-        "- Production deployment reference (terraform/ directory)",
-        "- Project structure explanation",
-        "- Technology stack with versions",
-        "- License (MIT)",
-        "Update .ctx/architecture.md:",
-        "- Add Redis to services table",
-        "- Add Jaeger to services table",
-        "- Update payment flow with idempotency check step",
-        "- Add distributed tracing flow",
-        "Create CONTRIBUTING.md:",
-        "- How to contribute (though personal project)",
-        "- Code style guidelines",
-        "- PR process",
-        "Create CHANGELOG.md:",
-        "- Version history",
-        "- What changed in each version",
-        "Ensure all .ctx files are up-to-date with final architecture"
-      ],
-      "priority": "high",
-      "status": "pending",
-      "depends_on": [
-        56
-      ],
-      "output": "Updated README.md, .ctx/architecture.md, CONTRIBUTING.md, CHANGELOG.md",
-      "done_when": [
-        "Comprehensive README with quick start guide",
-        "All badges displayed",
-        "Architecture documentation updated",
-        "Contributing guidelines present",
-        "Changelog tracks versions"
-      ]
-    },
-    {
-      "id": 58,
       "phase": "CV Preparation",
       "title": "Extract CV Bullet Points from SecurePay",
       "description": [
