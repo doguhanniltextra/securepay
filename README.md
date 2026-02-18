@@ -2,7 +2,7 @@
 
 **Zero-Trust, Event-Driven, Polyglot Fintech Platform**
 
-SecurePay is a demonstration of a production-grade microservices architecture, featuring mutual TLS (mTLS) via SPIFFE/SPIRE, event-driven communication with Kafka, distributed tracing with OpenTelemetry, and GitOps-ready infrastructure.
+SecurePay is a demonstration of a production-grade microservices architecture, featuring mutual TLS (mTLS) via SPIFFE/SPIRE, event-driven communication with Kafka, distributed tracing with OpenTelemetry infrastructure.
 
 ---
 
