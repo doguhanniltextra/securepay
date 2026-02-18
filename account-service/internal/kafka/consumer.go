@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 
 	"securepay/account-service/config"
 	"securepay/account-service/internal/cache"
@@ -50,11 +52,21 @@ func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanc
 					continue
 				}
 
-				slog.Info("Message received", "key", string(m.Key), "offset", m.Offset)
+				// Extract Trace Context
+				carrier := propagation.MapCarrier{}
+				for _, h := range m.Headers {
+					carrier[h.Key] = string(h.Value)
+				}
+				ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+				ctx, span := otel.Tracer("account-service").Start(ctx, "kafka.ConsumePaymentInitiatedEvent")
+
+				slog.Info("Message received", "key", string(m.Key), "offset", m.Offset, "trace_id", span.SpanContext().TraceID().String())
 
 				var event models.PaymentInitiatedEvent
 				if err := json.Unmarshal(m.Value, &event); err != nil {
 					slog.Error("Failed to unmarshal event", "error", err)
+					span.RecordError(err)
+					span.End()
 					c.reader.CommitMessages(ctx, m)
 					continue
 				}
@@ -83,7 +95,9 @@ func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanc
 				// Commit message after processing
 				if err := c.reader.CommitMessages(ctx, m); err != nil {
 					slog.Error("Failed to commit message", "error", err)
+					span.RecordError(err)
 				}
+				span.End()
 			}
 		}
 	}()

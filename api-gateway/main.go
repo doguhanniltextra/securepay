@@ -20,6 +20,18 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// 0. Initialize Tracer
+	shutdownTracer, err := InitTracer(ctx, "api-gateway")
+	if err != nil {
+		slog.Error("Failed to initialize tracer", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := shutdownTracer(context.Background()); err != nil {
+			slog.Error("Failed to shutdown tracer", "error", err)
+		}
+	}()
+
 	slog.Info("Starting API Gateway...", "port", 8080)
 
 	// 1. Initialize SPIFFE X.509 Source

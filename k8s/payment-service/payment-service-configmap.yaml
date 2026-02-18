@@ -18,3 +18,5 @@ data:
   # Redis Configuration
   REDIS_ADDR: "secure-pay-redis-master.default.svc.cluster.local:6379"
   REDIS_PASSWORD: "redispass"
+  # OpenTelemetry Configuration
+  OTEL_EXPORTER_OTLP_ENDPOINT: "secure-pay-jaeger.default.svc.cluster.local:4317"

@@ -53,8 +53,8 @@ func NewRouter(paymentClient paymentv1.PaymentServiceClient, accountClient accou
 
 // middlewareChain applies metrics, rate limiting and JWT authentication middleware.
 func middlewareChain(next http.Handler) http.Handler {
-	// Order: Metrics (outer) -> RateLimit -> JWT (inner) -> Handler
-	return middleware.MetricsMiddleware(middleware.RateLimitMiddleware(middleware.AuthMiddleware(next)))
+	// Order: Tracing (outer) -> Metrics -> RateLimit -> JWT (inner) -> Handler
+	return middleware.TracingMiddleware(middleware.MetricsMiddleware(middleware.RateLimitMiddleware(middleware.AuthMiddleware(next))))
 }
 
 func handleInitiatePayment(w http.ResponseWriter, r *http.Request, client paymentv1.PaymentServiceClient) {

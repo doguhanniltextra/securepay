@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -38,6 +39,9 @@ func NewPaymentHandler(repo repository.Repository, val *validator.Validator, pro
 }
 
 func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePaymentRequest) (*pb.InitiatePaymentResponse, error) {
+	ctx, span := otel.Tracer("payment-service").Start(ctx, "handler.InitiatePayment")
+	defer span.End()
+
 	slog.Info("InitiatePayment called", "payment_id", req.PaymentId, "amount", req.Amount)
 
 	// Validator
@@ -98,6 +102,9 @@ func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePa
 }
 
 func (h *PaymentHandler) GetPayment(ctx context.Context, req *pb.GetPaymentRequest) (*pb.GetPaymentResponse, error) {
+	ctx, span := otel.Tracer("payment-service").Start(ctx, "handler.GetPayment")
+	defer span.End()
+
 	slog.Info("GetPayment called", "payment_id", req.PaymentId)
 
 	if req.PaymentId == "" {

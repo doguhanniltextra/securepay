@@ -9,6 +9,7 @@ import (
 
 	"securepay/account-service/models"
 
+	"go.opentelemetry.io/otel"
 	_ "github.com/lib/pq"
 )
 
@@ -31,6 +32,9 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 
 // GetAccount fetches account details by ID
 func (r *PostgresRepository) GetAccount(ctx context.Context, accountID string) (*models.Account, error) {
+	ctx, span := otel.Tracer("account-service").Start(ctx, "postgres.GetAccount")
+	defer span.End()
+
 	query := `
 		SELECT account_id, balance, currency, created_at, updated_at, version
 		FROM accounts.balances
@@ -59,6 +63,9 @@ func (r *PostgresRepository) GetAccount(ctx context.Context, accountID string) (
 
 // UpsertAccount inserts or updates an account (used for seeding)
 func (r *PostgresRepository) UpsertAccount(ctx context.Context, account *models.Account) error {
+	ctx, span := otel.Tracer("account-service").Start(ctx, "postgres.UpsertAccount")
+	defer span.End()
+
 	query := `
 		INSERT INTO accounts.balances (account_id, balance, currency, created_at, updated_at, version)
 		VALUES ($1, $2, $3, NOW(), NOW(), 1)
@@ -75,6 +82,9 @@ func (r *PostgresRepository) UpsertAccount(ctx context.Context, account *models.
 
 // ProcessPayment handles the transactional balance update
 func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, toAccountID string, amount float64) error {
+	ctx, span := otel.Tracer("account-service").Start(ctx, "postgres.ProcessPayment")
+	defer span.End()
+
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)

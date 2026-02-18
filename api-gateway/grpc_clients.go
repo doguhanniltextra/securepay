@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	// Import generated code packages
@@ -30,7 +31,9 @@ func NewPaymentServiceClient(ctx context.Context, source *workloadapi.X509Source
 
 	// Dial the Payment Service using gRPC with mTLS.
 	// Returns immediately (async connection).
-	conn, err := grpc.DialContext(ctx, PaymentServiceAddr, creds)
+	conn, err := grpc.DialContext(ctx, PaymentServiceAddr, creds,
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial payment service: %w", err)
 	}
@@ -53,7 +56,9 @@ func NewAccountServiceClient(ctx context.Context, source *workloadapi.X509Source
 
 	// Dial the Account Service using gRPC with mTLS.
 	// Returns immediately (async connection).
-	conn, err := grpc.DialContext(ctx, AccountServiceAddr, creds)
+	conn, err := grpc.DialContext(ctx, AccountServiceAddr, creds,
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial account service: %w", err)
 	}

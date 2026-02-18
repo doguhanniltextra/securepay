@@ -19,7 +19,10 @@ import (
 	"securepay/account-service/internal/kafka"
 	"securepay/account-service/internal/repository"
 	"securepay/account-service/internal/spiffe"
+	"securepay/account-service/internal/telemetry"
 	"securepay/account-service/models"
+	
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	pb "securepay/proto/gen/go/account/v1"
 )
 
@@ -29,6 +32,18 @@ func main() {
 
 	// Load Configuration
 	cfg := config.Load()
+
+	// Initialize Tracer
+	shutdownTracer, err := telemetry.InitTracer(context.Background(), "account-service")
+	if err != nil {
+		slog.Error("Failed to initialize tracer", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := shutdownTracer(context.Background()); err != nil {
+			slog.Error("Failed to shutdown tracer", "error", err)
+		}
+	}()
 
 	// Connect to Database
 	if cfg.DatabaseURL == "" {
@@ -75,7 +90,7 @@ func main() {
 
 	// Create gRPC Server with mTLS
 	creds := spiffe.ServerCredentials(source)
-	s := grpc.NewServer(creds)
+	s := grpc.NewServer(creds, grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
 	// Register AccountService
 	h := handler.NewAccountHandler(repo, balanceCache)

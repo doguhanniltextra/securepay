@@ -13,3 +13,5 @@ data:
   # Service Connection Details (gRPC)
   PAYMENT_SERVICE_ADDR: "payment-service:8081"
   ACCOUNT_SERVICE_ADDR: "account-service:8082"
+  # OpenTelemetry Endpoint
+  OTEL_EXPORTER_OTLP_ENDPOINT: "secure-pay-jaeger.default.svc.cluster.local:4317"

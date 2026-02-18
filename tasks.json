@@ -805,7 +805,7 @@
         "Test: Open http://localhost:16686 in browser, verify Jaeger UI loads"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         34
       ],
@@ -835,7 +835,7 @@
         "Test: Make API call, verify trace appears in Jaeger UI with all spans"
       ],
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         38
       ],

@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/lib/pq"
 	
+	"go.opentelemetry.io/otel"
 	"securepay/payment-service/models"
 	pb "securepay/proto/gen/go/payment/v1"
 )
@@ -31,6 +32,9 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 
 // SavePayment saves a new payment to the database
 func (r *PostgresRepository) SavePayment(ctx context.Context, req *pb.InitiatePaymentRequest) error {
+	ctx, span := otel.Tracer("payment-service").Start(ctx, "postgres.SavePayment")
+	defer span.End()
+
 	query := `
 		INSERT INTO payments.transactions (
 			id, from_account, to_account, amount, currency, status, idempotency_key, created_at, updated_at, version
@@ -57,6 +61,9 @@ func (r *PostgresRepository) SavePayment(ctx context.Context, req *pb.InitiatePa
 
 // GetPayment fetches a payment by ID
 func (r *PostgresRepository) GetPayment(ctx context.Context, paymentId string) (*models.Payment, error) {
+	ctx, span := otel.Tracer("payment-service").Start(ctx, "postgres.GetPayment")
+	defer span.End()
+
 	query := `
 		SELECT id, from_account, to_account, amount, currency, status, idempotency_key, created_at, updated_at, version
 		FROM payments.transactions

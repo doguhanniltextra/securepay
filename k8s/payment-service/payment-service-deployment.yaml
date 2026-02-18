@@ -18,7 +18,7 @@ spec:
       serviceAccountName: payment-service
       containers:
         - name: payment-service
-          image: payment-service:v0.0.3
+          image: payment-service:v0.0.4
           imagePullPolicy: Never
           ports:
             - containerPort: 8081

@@ -22,7 +22,7 @@ spec:
       serviceAccountName: api-gateway
       containers:
         - name: api-gateway
-          image: api-gateway:v1.0.4 # Added metrics middleware
+          image: api-gateway:v1.0.5 # Added OpenTelemetry tracing
           imagePullPolicy: Never # Critical for Minikube local images
           ports:
             - containerPort: 8080

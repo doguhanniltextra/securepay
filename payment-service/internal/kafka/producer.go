@@ -7,6 +7,8 @@ import (
 	"log/slog"
 
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"securepay/payment-service/models"
 )
 
@@ -38,14 +40,27 @@ func (kp *Producer) Close() error {
 
 // ProducePaymentInitiatedEvent sends the event to Kafka
 func (kp *Producer) ProducePaymentInitiatedEvent(ctx context.Context, event models.PaymentInitiatedEvent) error {
+	ctx, span := otel.Tracer("payment-service").Start(ctx, "kafka.ProducePaymentInitiatedEvent")
+	defer span.End()
+
 	payload, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
+	// Inject Trace Context
+	carrier := propagation.MapCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, carrier)
+
+	headers := make([]kafka.Header, 0, len(carrier))
+	for k, v := range carrier {
+		headers = append(headers, kafka.Header{Key: k, Value: []byte(v)})
+	}
+
 	msg := kafka.Message{
-		Key:   []byte(event.PaymentID), // Use PaymentID as key for ordering guarantees if partitioned
-		Value: payload,
+		Key:     []byte(event.PaymentID), // Use PaymentID as key for ordering guarantees if partitioned
+		Value:   payload,
+		Headers: headers,
 	}
 
 	// WriteMessages blocks until the message is sent

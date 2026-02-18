@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"log/slog"
+	
+	"go.opentelemetry.io/otel"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +28,9 @@ func NewAccountHandler(repo repository.Repository, cache cache.Cache) *AccountHa
 
 // CheckBalance get account balance (read-aside cache pattern)
 func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceRequest) (*pb.CheckBalanceResponse, error) {
+	ctx, span := otel.Tracer("account-service").Start(ctx, "handler.CheckBalance")
+	defer span.End()
+
 	slog.Info("CheckBalance called", "account_id", req.AccountId)
 
 	if req.AccountId == "" {
