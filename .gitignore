@@ -31,3 +31,7 @@ target/
 # Temp
 .docker_tmp/
 Microsoft.PowerShell.CoreFileSystem*
+
+.ctx
+tasks.json
+target.json
