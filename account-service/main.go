@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"securepay/account-service/config"
+	"securepay/account-service/internal/cache"
 	"securepay/account-service/internal/handler"
 	"securepay/account-service/internal/kafka"
 	"securepay/account-service/internal/repository"
@@ -53,15 +54,15 @@ func main() {
 	// Seed Data
 	seedAccounts(context.Background(), repo)
 
+	// Initialize Redis Cache
+	balanceCache := cache.NewRedisCache(cfg.RedisAddr, cfg.RedisPassword)
+	slog.Info("Redis cache initialized", "addr", cfg.RedisAddr)
+
 	// Initialize Kafka Consumer
 	consumer := kafka.NewConsumer(cfg)
-	// Start consuming in background
-	// We pass a context that cancels on shutdown?
-	// For now, background context or separate context.
-	// But `Start` runs goroutine.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	consumer.Start(ctx, repo)
+	consumer.Start(ctx, repo, balanceCache)
 
 	// Initialize SPIFFE Workload API Source
 	source, err := spiffe.InitSPIFFESource(ctx, cfg.SpiffeSocket)
@@ -77,7 +78,7 @@ func main() {
 	s := grpc.NewServer(creds)
 
 	// Register AccountService
-	h := handler.NewAccountHandler(repo)
+	h := handler.NewAccountHandler(repo, balanceCache)
 	pb.RegisterAccountServiceServer(s, h)
 
 	// Enable reflection

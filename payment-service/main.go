@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"securepay/payment-service/config"
+	"securepay/payment-service/internal/cache"
 	"securepay/payment-service/internal/handler"
 	"securepay/payment-service/internal/kafka"
 	"securepay/payment-service/internal/repository"
@@ -62,9 +63,10 @@ func main() {
 	slog.Info("SPIFFE Source initialized successfully")
 
 	// Initialize Components
+	redisCache := cache.NewRedisCache(cfg.RedisAddr, cfg.RedisPassword)
 	repo := repository.NewPostgresRepository(db)
 	val := validator.New()
-	h := handler.NewPaymentHandler(repo, val, producer)
+	h := handler.NewPaymentHandler(repo, val, producer, redisCache)
 
 	// Create gRPC server with mTLS credentials
 	creds := spiffe.PaymentServiceServerCredentials(source)

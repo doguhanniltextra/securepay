@@ -14,7 +14,9 @@ type Config struct {
 	DatabaseURL  string
 	KafkaBrokers []string
 	KafkaTopic   string
-	SpiffeSocket string
+	SpiffeSocket  string
+	RedisAddr     string
+	RedisPassword string
 }
 
 // Load loads the configuration from environment variables
@@ -29,7 +31,9 @@ func Load() *Config {
 		DatabaseURL:  getEnv("DATABASE_URL", ""),
 		KafkaBrokers: getEnvList("KAFKA_BROKERS", []string{"localhost:9092"}),
 		KafkaTopic:   getEnv("KAFKA_TOPIC", "payment.initiated"),
-		SpiffeSocket: getEnv("SPIFFE_ENDPOINT_SOCKET", "unix:///tmp/spire-agent/public/api.sock"),
+		SpiffeSocket:  getEnv("SPIFFE_ENDPOINT_SOCKET", "unix:///tmp/spire-agent/public/api.sock"),
+		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 	}
 }
 

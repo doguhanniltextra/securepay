@@ -2,12 +2,15 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"securepay/payment-service/internal/cache"
 	"securepay/payment-service/internal/kafka"
 	"securepay/payment-service/internal/repository"
 	"securepay/payment-service/internal/validator"
@@ -21,14 +24,16 @@ type PaymentHandler struct {
 	repo      repository.Repository
 	validator *validator.Validator
 	producer  *kafka.Producer
+	cache     cache.Cache
 }
 
 // NewPaymentHandler creates a new PaymentHandler
-func NewPaymentHandler(repo repository.Repository, val *validator.Validator, producer *kafka.Producer) *PaymentHandler {
+func NewPaymentHandler(repo repository.Repository, val *validator.Validator, producer *kafka.Producer, cache cache.Cache) *PaymentHandler {
 	return &PaymentHandler{
 		repo:      repo,
 		validator: val,
 		producer:  producer,
+		cache:     cache,
 	}
 }
 
@@ -41,7 +46,17 @@ func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePa
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// TODO: Idempotency Check
+	// Idempotency Check
+	idempotencyKey := fmt.Sprintf("idempotency:%s", req.IdempotencyKey)
+	cachedResp, err := h.cache.Get(ctx, idempotencyKey)
+	if err == nil && cachedResp != "" {
+		slog.Info("Returning cached response for idempotency", "key", req.IdempotencyKey)
+		var resp pb.InitiatePaymentResponse
+		if err := json.Unmarshal([]byte(cachedResp), &resp); err == nil {
+			return &resp, nil
+		}
+		slog.Warn("Failed to unmarshal cached response", "error", err)
+	}
 
 	// TODO: Balance Check (via Account Service gRPC)
 
@@ -63,18 +78,23 @@ func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePa
 
 	if err := h.producer.ProducePaymentInitiatedEvent(ctx, event); err != nil {
 		slog.Error("Failed to produce payment initiated event", "error", err)
-		// We return error here to signal failure to the client, 
-		// although DB record is already created (in PENDING state).
-		// In a real system, we might want to transactions or outbox pattern.
 		return nil, status.Errorf(codes.Internal, "failed to produce payment event: %v", err)
 	}
 
-	// Return PENDING response
-	return &pb.InitiatePaymentResponse{
+	// Prepare PENDING response
+	resp := &pb.InitiatePaymentResponse{
 		PaymentId: req.PaymentId,
 		Status:    pb.PaymentStatus_PENDING,
 		Message:   "Payment initiated",
-	}, nil
+	}
+
+	// Save idempotency record to Redis
+	respJSON, _ := json.Marshal(resp)
+	if err := h.cache.Set(ctx, idempotencyKey, string(respJSON), 24*time.Hour); err != nil {
+		slog.Warn("Failed to set idempotency key in cache", "error", err)
+	}
+
+	return resp, nil
 }
 
 func (h *PaymentHandler) GetPayment(ctx context.Context, req *pb.GetPaymentRequest) (*pb.GetPaymentResponse, error) {
