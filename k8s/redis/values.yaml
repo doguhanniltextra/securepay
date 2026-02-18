@@ -1,0 +1,13 @@
+# k8s/redis/values.yaml
+auth:
+  enabled: true
+  password: redispass
+
+master:
+  persistence:
+    enabled: false
+
+replica:
+  replicaCount: 1
+  persistence:
+    enabled: false
