@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"log/slog"
-	
+
 	"go.opentelemetry.io/otel"
 
 	"google.golang.org/grpc/codes"
@@ -31,7 +31,7 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 	ctx, span := otel.Tracer("account-service").Start(ctx, "handler.CheckBalance")
 	defer span.End()
 
-	slog.Info("CheckBalance called", "account_id", req.AccountId)
+	slog.InfoContext(ctx, "CheckBalance called", "account_id", req.AccountId)
 
 	if req.AccountId == "" {
 		return nil, status.Error(codes.InvalidArgument, "account_id is required")
@@ -40,10 +40,10 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 	// 1. Check Redis cache
 	entry, err := h.cache.GetBalance(ctx, req.AccountId)
 	if err != nil {
-		slog.Warn("Cache get failed, falling back to DB", "error", err)
+		slog.WarnContext(ctx, "Cache get failed, falling back to DB", "error", err)
 	}
 	if entry != nil {
-		slog.Info("Cache hit", "account_id", req.AccountId)
+		slog.InfoContext(ctx, "Cache hit", "account_id", req.AccountId)
 		return &pb.CheckBalanceResponse{
 			AccountId: req.AccountId,
 			Balance:   entry.Balance,
@@ -52,10 +52,10 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 	}
 
 	// 2. Cache miss -- fetch from PostgreSQL
-	slog.Info("Cache miss", "account_id", req.AccountId)
+	slog.InfoContext(ctx, "Cache miss", "account_id", req.AccountId)
 	acc, err := h.repo.GetAccount(ctx, req.AccountId)
 	if err != nil {
-		slog.Error("Failed to get account", "error", err)
+		slog.ErrorContext(ctx, "Failed to get account", "error", err)
 		return nil, status.Errorf(codes.NotFound, "account not found: %v", err)
 	}
 
@@ -65,7 +65,7 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 		Currency: acc.Currency,
 	}
 	if err := h.cache.SetBalance(ctx, req.AccountId, cacheEntry); err != nil {
-		slog.Warn("Failed to set cache", "error", err)
+		slog.WarnContext(ctx, "Failed to set cache", "error", err)
 	}
 
 	return &pb.CheckBalanceResponse{
