@@ -12,7 +12,6 @@ import (
 	"securepay/payment-service/models"
 )
 
-
 // Producer wrapper
 type Producer struct {
 	writer *kafka.Writer
@@ -27,8 +26,7 @@ func NewProducer(brokers []string, topic string) *Producer {
 			Addr:     kafka.TCP(brokers...),
 			Topic:    topic,
 			Balancer: &kafka.LeastBytes{},
-			// Async by default usually, but we might want to check errors.
-			// WriteMessages is blocking/sync by default in kafka-go which is good for reliability here.
+			// WriteMessages is blocking/sync by default in kafka-go which is good for reliability.
 		},
 	}
 }
@@ -48,7 +46,7 @@ func (kp *Producer) ProducePaymentInitiatedEvent(ctx context.Context, event mode
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	// Inject Trace Context
+	// Inject Trace Context into Kafka headers for downstream consumers to extract
 	carrier := propagation.MapCarrier{}
 	otel.GetTextMapPropagator().Inject(ctx, carrier)
 
@@ -58,7 +56,7 @@ func (kp *Producer) ProducePaymentInitiatedEvent(ctx context.Context, event mode
 	}
 
 	msg := kafka.Message{
-		Key:     []byte(event.PaymentID), // Use PaymentID as key for ordering guarantees if partitioned
+		Key:     []byte(event.PaymentID), // Use PaymentID as key for ordering guarantees
 		Value:   payload,
 		Headers: headers,
 	}
@@ -68,6 +66,6 @@ func (kp *Producer) ProducePaymentInitiatedEvent(ctx context.Context, event mode
 		return fmt.Errorf("failed to write message to kafka: %w", err)
 	}
 
-	slog.Info("Produced event to Kafka", "topic", kp.writer.Topic, "payment_id", event.PaymentID)
+	slog.InfoContext(ctx, "Produced event to Kafka", "topic", kp.writer.Topic, "payment_id", event.PaymentID)
 	return nil
 }

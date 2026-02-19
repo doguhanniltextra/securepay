@@ -17,6 +17,7 @@ import (
 	"securepay/payment-service/internal/cache"
 	"securepay/payment-service/internal/handler"
 	"securepay/payment-service/internal/kafka"
+	"securepay/payment-service/internal/logger"
 	"securepay/payment-service/internal/repository"
 	"securepay/payment-service/internal/spiffe"
 	"securepay/payment-service/internal/telemetry"
@@ -26,8 +27,9 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	// Use the OTel-aware JSON logger so that trace_id and span_id are
+	// automatically injected into every log record that carries a span.
+	slog.SetDefault(logger.New())
 
 	// Load configuration
 	cfg := config.Load()
