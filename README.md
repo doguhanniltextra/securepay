@@ -62,7 +62,7 @@ make test
 ![Prometheus-Grafana](./images/prometheus-grafana.png)
 ![Jaeger](./images/jaeger.png)
 
-## 📚 Documentation
+## Documentation
 For detailed architecture, API specs, and design decisions, see the [local documentation site](docs/index.html).
 
 - **Dashboard**: [docs/index.html](docs/index.html)
