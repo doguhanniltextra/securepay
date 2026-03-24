@@ -54,3 +54,12 @@ type PaymentInitiatedEvent struct {
 	Timestamp   string  `json:"timestamp"`
 }
 
+// PaymentResultEvent represents the result produced by account-service.
+// Consumed by payment-service to update transaction status.
+type PaymentResultEvent struct {
+	PaymentID string `json:"payment_id"`
+	Status    string `json:"status"` // "COMPLETED" or "FAILED"
+	Reason    string `json:"reason,omitempty"`
+	Timestamp string `json:"timestamp"`
+}
+

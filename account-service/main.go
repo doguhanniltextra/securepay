@@ -75,11 +75,14 @@ func main() {
 	balanceCache := cache.NewRedisCache(cfg.RedisAddr, cfg.RedisPassword)
 	slog.Info("Redis cache initialized", "addr", cfg.RedisAddr)
 
-	// Initialize Kafka Consumer
+	// Initialize Kafka Consumer & Result Producer
 	consumer := kafka.NewConsumer(cfg)
+	resultProducer := kafka.NewProducer(cfg.KafkaBrokers, cfg.KafkaResultTopic)
+	defer resultProducer.Close()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	consumer.Start(ctx, repo, balanceCache)
+	consumer.Start(ctx, repo, balanceCache, resultProducer)
 
 	// Initialize SPIFFE Workload API Source
 	source, err := spiffe.InitSPIFFESource(ctx, cfg.SpiffeSocket)

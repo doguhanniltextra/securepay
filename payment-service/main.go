@@ -82,6 +82,14 @@ func main() {
 	redisCache := cache.NewRedisCache(cfg.RedisAddr, cfg.RedisPassword)
 	repo := repository.NewPostgresRepository(db)
 	val := validator.New()
+
+	// Start Result Consumer (listens for COMPLETED/FAILED events from account-service)
+	resultConsumer := kafka.NewResultConsumer(cfg.KafkaBrokers, cfg.KafkaResultTopic)
+	defer resultConsumer.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	resultConsumer.Start(ctx, repo)
+
 	h := handler.NewPaymentHandler(repo, val, producer, redisCache)
 
 	// Create gRPC server with mTLS credentials

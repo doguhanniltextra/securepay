@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/segmentio/kafka-go"
+	kgo "github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 
@@ -17,22 +17,24 @@ import (
 )
 
 type Consumer struct {
-	reader *kafka.Reader
+	reader *kgo.Reader
 }
 
 func NewConsumer(cfg *config.Config) *Consumer {
-	reader := kafka.NewReader(kafka.ReaderConfig{
+	reader := kgo.NewReader(kgo.ReaderConfig{
 		Brokers:  cfg.KafkaBrokers,
 		Topic:    cfg.KafkaTopic,
-		GroupID:  "account-service-group", // Convention
-		MinBytes: 10e3,                    // 10KB
-		MaxBytes: 10e6,                    // 10MB
+		GroupID:  "account-service-group",
+		MinBytes: 10e3, // 10KB
+		MaxBytes: 10e6, // 10MB
 	})
 
 	return &Consumer{reader: reader}
 }
 
-func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanceCache cache.Cache) {
+// Start begins consuming payment.initiated events.
+// After processing, it produces a result event via the resultProducer.
+func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanceCache cache.Cache, resultProducer *Producer) {
 	slog.InfoContext(ctx, "Starting Kafka Consumer", "topic", c.reader.Config().Topic)
 	go func() {
 		for {
@@ -75,21 +77,28 @@ func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanc
 					continue
 				}
 
-				// Process Payment (Deduct Balance)
+				// Process Payment (Deduct & Credit Balance)
+				resultEvent := models.PaymentResultEvent{
+					PaymentID: event.PaymentID,
+					Timestamp: time.Now().Format(time.RFC3339),
+				}
+
 				err = repo.ProcessPayment(msgCtx, event.FromAccount, event.ToAccount, event.Amount)
 				if err != nil {
 					slog.ErrorContext(msgCtx, "Failed to process payment",
 						"error", err,
 						"payment_id", event.PaymentID,
 					)
+					resultEvent.Status = "FAILED"
+					resultEvent.Reason = err.Error()
 				} else {
 					slog.InfoContext(msgCtx, "Payment processed successfully", "payment_id", event.PaymentID)
+					resultEvent.Status = "COMPLETED"
 
 					// Invalidate Redis cache for both accounts
 					if delErr := balanceCache.DeleteBalance(msgCtx, event.FromAccount); delErr != nil {
 						slog.WarnContext(msgCtx, "Failed to invalidate cache for from_account",
-							"account_id", event.FromAccount,
-							"error", delErr,
+							"account_id", event.FromAccount, "error", delErr,
 						)
 					} else {
 						slog.InfoContext(msgCtx, "Cache invalidated", "account_id", event.FromAccount)
@@ -97,11 +106,20 @@ func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanc
 
 					if delErr := balanceCache.DeleteBalance(msgCtx, event.ToAccount); delErr != nil {
 						slog.WarnContext(msgCtx, "Failed to invalidate cache for to_account",
-							"account_id", event.ToAccount,
-							"error", delErr,
+							"account_id", event.ToAccount, "error", delErr,
 						)
 					} else {
 						slog.InfoContext(msgCtx, "Cache invalidated", "account_id", event.ToAccount)
+					}
+				}
+
+				// Produce result event so payment-service can update status
+				if resultProducer != nil {
+					if pubErr := resultProducer.ProducePaymentResultEvent(msgCtx, resultEvent); pubErr != nil {
+						slog.ErrorContext(msgCtx, "Failed to produce result event",
+							"error", pubErr, "payment_id", event.PaymentID,
+						)
+						span.RecordError(pubErr)
 					}
 				}
 

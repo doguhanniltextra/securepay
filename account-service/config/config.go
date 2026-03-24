@@ -12,9 +12,10 @@ import (
 type Config struct {
 	Port         string
 	DatabaseURL  string
-	KafkaBrokers []string
-	KafkaTopic   string
-	SpiffeSocket  string
+	KafkaBrokers     []string
+	KafkaTopic       string
+	KafkaResultTopic string
+	SpiffeSocket     string
 	RedisAddr     string
 	RedisPassword string
 }
@@ -29,9 +30,10 @@ func Load() *Config {
 	return &Config{
 		Port:         getEnv("PORT", ":8082"), // Default 8082 for Account Service
 		DatabaseURL:  getEnv("DATABASE_URL", ""),
-		KafkaBrokers: getEnvList("KAFKA_BROKERS", []string{"localhost:9092"}),
-		KafkaTopic:   getEnv("KAFKA_TOPIC", "payment.initiated"),
-		SpiffeSocket:  getEnv("SPIFFE_ENDPOINT_SOCKET", "unix:///tmp/spire-agent/public/api.sock"),
+		KafkaBrokers:     getEnvList("KAFKA_BROKERS", []string{"localhost:9092"}),
+		KafkaTopic:       getEnv("KAFKA_TOPIC", "payment.initiated"),
+		KafkaResultTopic: getEnv("KAFKA_RESULT_TOPIC", "payment.result"),
+		SpiffeSocket:     getEnv("SPIFFE_ENDPOINT_SOCKET", "unix:///tmp/spire-agent/public/api.sock"),
 		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 	}
