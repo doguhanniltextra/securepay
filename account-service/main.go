@@ -17,18 +17,20 @@ import (
 	"securepay/account-service/internal/cache"
 	"securepay/account-service/internal/handler"
 	"securepay/account-service/internal/kafka"
+	"securepay/account-service/internal/logger"
 	"securepay/account-service/internal/repository"
 	"securepay/account-service/internal/spiffe"
 	"securepay/account-service/internal/telemetry"
 	"securepay/account-service/models"
-	
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	pb "securepay/proto/gen/go/account/v1"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	// Use the OTel-aware JSON logger so that trace_id and span_id are
+	// automatically injected into every log record that carries a span.
+	slog.SetDefault(logger.New())
 
 	// Load Configuration
 	cfg := config.Load()

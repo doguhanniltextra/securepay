@@ -10,21 +10,22 @@ DOCKER_BUILD := eval $$(minikube -p $(MINIKUBE_PROFILE) docker-env) && docker bu
 .PHONY: help
 help:
 	@echo "SecurePay Development Commands:"
-	@echo "  make ping          - Ping the cluster"
-	@echo "  make start         - Start Minikube cluster"
-	@echo "  make stop          - Stop Minikube cluster"
-	@echo "  make delete        - Delete Minikube cluster"
-	@echo "  make infrastructure - Install all infrastructure (Spire, Kafka, Redis, Jaeger)"
-	@echo "  make spire         - Install and Configure SPIRE"
-	@echo "  make spire-register - Register workloads with SPIRE"
-	@echo "  make kafka         - Install Kafka"
-	@echo "  make redis         - Install Redis"
-	@echo "  make jaeger        - Install Jaeger"
-	@echo "  make build         - Build all service Docker images"
-	@echo "  make deploy        - Deploy application manifests to K8s"
-	@echo "  make all           - Start, Infra, Build, Deploy"
-	@echo "  make test          - Run end-to-end payment test"
-	@echo "  make clean         - Remove all resources"
+	@echo "  make ping            - Ping the cluster"
+	@echo "  make start           - Start Minikube cluster"
+	@echo "  make stop            - Stop Minikube cluster"
+	@echo "  make delete          - Delete Minikube cluster"
+	@echo "  make infrastructure  - Install all infrastructure (Spire, Kafka, Redis, Jaeger)"
+	@echo "  make spire           - Install and Configure SPIRE"
+	@echo "  make spire-register  - Register workloads with SPIRE"
+	@echo "  make kafka           - Install Kafka"
+	@echo "  make redis           - Install Redis"
+	@echo "  make jaeger          - Install Jaeger"
+	@echo "  make metrics-server  - Deploy metrics-server (required for HPA)"
+	@echo "  make build           - Build all service Docker images"
+	@echo "  make deploy          - Deploy metrics-server + application manifests + HPAs"
+	@echo "  make all             - Start, Infra, Build, Deploy"
+	@echo "  make test            - Run end-to-end payment test"
+	@echo "  make clean           - Remove all resources"
 
 
 # --- Ping ---
@@ -109,8 +110,15 @@ build:
 	$(DOCKER_BUILD) -t securepay/account-service:v0.0.3 account-service/
 	$(DOCKER_BUILD) -t securepay/notification-service:v0.0.5 notification-service/
 
+.PHONY: metrics-server
+metrics-server:
+	@echo "Deploying metrics-server..."
+	$(KUBECTL) apply -f k8s/metrics-server.yaml
+	@echo "Waiting for metrics-server to be ready..."
+	$(KUBECTL) wait --for=condition=available deployment/metrics-server -n kube-system --timeout=120s
+
 .PHONY: deploy
-deploy:
+deploy: metrics-server
 	@echo "Deploying application..."
 	$(KUBECTL) apply -f k8s/api-gateway/
 	$(KUBECTL) apply -f k8s/payment-service/

@@ -33,7 +33,7 @@ func NewConsumer(cfg *config.Config) *Consumer {
 }
 
 func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanceCache cache.Cache) {
-	slog.Info("Starting Kafka Consumer", "topic", c.reader.Config().Topic)
+	slog.InfoContext(ctx, "Starting Kafka Consumer", "topic", c.reader.Config().Topic)
 	go func() {
 		for {
 			select {
@@ -47,54 +47,67 @@ func (c *Consumer) Start(ctx context.Context, repo repository.Repository, balanc
 					if ctx.Err() != nil {
 						return // Context closed
 					}
-					slog.Error("Failed to fetch message", "error", err)
+					slog.ErrorContext(ctx, "Failed to fetch message", "error", err)
 					time.Sleep(time.Second) // Backoff
 					continue
 				}
 
-				// Extract Trace Context
+				// Extract Trace Context from Kafka headers
 				carrier := propagation.MapCarrier{}
 				for _, h := range m.Headers {
 					carrier[h.Key] = string(h.Value)
 				}
-				ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
-				ctx, span := otel.Tracer("account-service").Start(ctx, "kafka.ConsumePaymentInitiatedEvent")
+				msgCtx := otel.GetTextMapPropagator().Extract(ctx, carrier)
+				msgCtx, span := otel.Tracer("account-service").Start(msgCtx, "kafka.ConsumePaymentInitiatedEvent")
 
-				slog.Info("Message received", "key", string(m.Key), "offset", m.Offset, "trace_id", span.SpanContext().TraceID().String())
+				slog.InfoContext(msgCtx, "Message received",
+					"key", string(m.Key),
+					"offset", m.Offset,
+					"trace_id", span.SpanContext().TraceID().String(),
+				)
 
 				var event models.PaymentInitiatedEvent
 				if err := json.Unmarshal(m.Value, &event); err != nil {
-					slog.Error("Failed to unmarshal event", "error", err)
+					slog.ErrorContext(msgCtx, "Failed to unmarshal event", "error", err)
 					span.RecordError(err)
 					span.End()
-					c.reader.CommitMessages(ctx, m)
+					c.reader.CommitMessages(msgCtx, m)
 					continue
 				}
 
 				// Process Payment (Deduct Balance)
-				err = repo.ProcessPayment(ctx, event.FromAccount, event.ToAccount, event.Amount)
+				err = repo.ProcessPayment(msgCtx, event.FromAccount, event.ToAccount, event.Amount)
 				if err != nil {
-					slog.Error("Failed to process payment", "error", err, "payment_id", event.PaymentID)
+					slog.ErrorContext(msgCtx, "Failed to process payment",
+						"error", err,
+						"payment_id", event.PaymentID,
+					)
 				} else {
-					slog.Info("Payment processed successfully", "payment_id", event.PaymentID)
+					slog.InfoContext(msgCtx, "Payment processed successfully", "payment_id", event.PaymentID)
 
 					// Invalidate Redis cache for both accounts
-					if delErr := balanceCache.DeleteBalance(ctx, event.FromAccount); delErr != nil {
-						slog.Warn("Failed to invalidate cache for from_account", "account_id", event.FromAccount, "error", delErr)
+					if delErr := balanceCache.DeleteBalance(msgCtx, event.FromAccount); delErr != nil {
+						slog.WarnContext(msgCtx, "Failed to invalidate cache for from_account",
+							"account_id", event.FromAccount,
+							"error", delErr,
+						)
 					} else {
-						slog.Info("Cache invalidated", "account_id", event.FromAccount)
+						slog.InfoContext(msgCtx, "Cache invalidated", "account_id", event.FromAccount)
 					}
 
-					if delErr := balanceCache.DeleteBalance(ctx, event.ToAccount); delErr != nil {
-						slog.Warn("Failed to invalidate cache for to_account", "account_id", event.ToAccount, "error", delErr)
+					if delErr := balanceCache.DeleteBalance(msgCtx, event.ToAccount); delErr != nil {
+						slog.WarnContext(msgCtx, "Failed to invalidate cache for to_account",
+							"account_id", event.ToAccount,
+							"error", delErr,
+						)
 					} else {
-						slog.Info("Cache invalidated", "account_id", event.ToAccount)
+						slog.InfoContext(msgCtx, "Cache invalidated", "account_id", event.ToAccount)
 					}
 				}
-				
+
 				// Commit message after processing
-				if err := c.reader.CommitMessages(ctx, m); err != nil {
-					slog.Error("Failed to commit message", "error", err)
+				if err := c.reader.CommitMessages(msgCtx, m); err != nil {
+					slog.ErrorContext(msgCtx, "Failed to commit message", "error", err)
 					span.RecordError(err)
 				}
 				span.End()

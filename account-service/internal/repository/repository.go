@@ -138,6 +138,6 @@ func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, 
 		return fmt.Errorf("to_account not found")
 	}
 
-	slog.Info("Successfully processed payment", "from", fromAccountID, "to", toAccountID, "amount", amount)
+	slog.InfoContext(ctx, "Successfully processed payment", "from", fromAccountID, "to", toAccountID, "amount", amount)
 	return nil
 }
