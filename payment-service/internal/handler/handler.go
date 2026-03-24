@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -70,12 +71,13 @@ func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePa
 		return nil, status.Errorf(codes.Internal, "failed to save payment: %v", err)
 	}
 
-	// Create Kafka Event
+	// Create Kafka Event (convert proto double to decimal for precise serialization)
+	amount := decimal.NewFromFloat(req.Amount)
 	event := models.PaymentInitiatedEvent{
 		PaymentID:   req.PaymentId,
 		FromAccount: req.FromAccount,
 		ToAccount:   req.ToAccount,
-		Amount:      req.Amount,
+		Amount:      amount,
 		Currency:    req.Currency,
 		Timestamp:   time.Now().Format(time.RFC3339),
 	}
@@ -136,7 +138,7 @@ func (h *PaymentHandler) GetPayment(ctx context.Context, req *pb.GetPaymentReque
 		PaymentId:   payment.ID,
 		Status:      paymentStatus,
 		Message:     "Payment details retrieved",
-		Amount:      payment.Amount,
+		Amount:      payment.Amount.InexactFloat64(),
 		Currency:    payment.Currency,
 		FromAccount: payment.FromAccount,
 		ToAccount:   payment.ToAccount,

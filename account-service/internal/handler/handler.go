@@ -46,7 +46,7 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 		slog.InfoContext(ctx, "Cache hit", "account_id", req.AccountId)
 		return &pb.CheckBalanceResponse{
 			AccountId: req.AccountId,
-			Balance:   entry.Balance,
+			Balance:   entry.Balance.InexactFloat64(),
 			Currency:  entry.Currency,
 		}, nil
 	}
@@ -70,7 +70,7 @@ func (h *AccountHandler) CheckBalance(ctx context.Context, req *pb.CheckBalanceR
 
 	return &pb.CheckBalanceResponse{
 		AccountId: acc.ID,
-		Balance:   acc.Balance,
+		Balance:   acc.Balance.InexactFloat64(),
 		Currency:  acc.Currency,
 	}, nil
 }

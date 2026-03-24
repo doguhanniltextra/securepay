@@ -23,6 +23,8 @@ import (
 	"securepay/account-service/internal/telemetry"
 	"securepay/account-service/models"
 
+	"github.com/shopspring/decimal"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	pb "securepay/proto/gen/go/account/v1"
 )
@@ -133,12 +135,12 @@ func seedAccounts(ctx context.Context, repo repository.Repository) {
 	accounts := []models.Account{
 		{
 			ID:       "11111111-1111-1111-1111-111111111111", // Ahmet
-			Balance:  1000.00,
+			Balance:  decimal.NewFromFloat(1000.00),
 			Currency: "TRY",
 		},
 		{
 			ID:       "22222222-2222-2222-2222-222222222222", // Mehmet
-			Balance:  500.00,
+			Balance:  decimal.NewFromFloat(500.00),
 			Currency: "TRY",
 		},
 	}

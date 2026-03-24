@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 // PaymentStatus represents the status of a payment transaction
@@ -35,7 +37,7 @@ type Payment struct {
 	ID             string
 	FromAccount    string
 	ToAccount      string
-	Amount         float64
+	Amount         decimal.Decimal
 	Currency       string
 	Status         string
 	IdempotencyKey string
@@ -49,7 +51,7 @@ type PaymentInitiatedEvent struct {
 	PaymentID   string  `json:"payment_id"`
 	FromAccount string  `json:"from_account"`
 	ToAccount   string  `json:"to_account"`
-	Amount      float64 `json:"amount"`
+	Amount      decimal.Decimal `json:"amount"`
 	Currency    string  `json:"currency"`
 	Timestamp   string  `json:"timestamp"`
 }

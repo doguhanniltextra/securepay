@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/shopspring/decimal"
 )
 
 // BalanceEntry represents a cached balance value.
 type BalanceEntry struct {
-	Balance  float64 `json:"balance"`
-	Currency string  `json:"currency"`
+	Balance  decimal.Decimal `json:"balance"`
+	Currency string          `json:"currency"`
 }
 
 // Cache interface defines operations for balance caching.

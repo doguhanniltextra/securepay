@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/shopspring/decimal"
+
 	"securepay/account-service/models"
 
 	"go.opentelemetry.io/otel"
@@ -17,7 +19,7 @@ import (
 type Repository interface {
 	GetAccount(ctx context.Context, accountID string) (*models.Account, error)
 	UpsertAccount(ctx context.Context, account *models.Account) error
-	ProcessPayment(ctx context.Context, fromAccountID, toAccountID string, amount float64) error
+	ProcessPayment(ctx context.Context, fromAccountID, toAccountID string, amount decimal.Decimal) error
 }
 
 // PostgresRepository implements Repository
@@ -81,7 +83,7 @@ func (r *PostgresRepository) UpsertAccount(ctx context.Context, account *models.
 
 
 // ProcessPayment handles the transactional balance update
-func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, toAccountID string, amount float64) error {
+func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, toAccountID string, amount decimal.Decimal) error {
 	ctx, span := otel.Tracer("account-service").Start(ctx, "postgres.ProcessPayment")
 	defer span.End()
 
@@ -101,8 +103,8 @@ func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, 
 		}
 	}()
 
-	// 1. Lock From Account and Check Balance
-	var fromBalance float64
+	// 1. Lock From Account and Check Balance (using decimal for precise comparison)
+	var fromBalance decimal.Decimal
 	err = tx.QueryRowContext(ctx, "SELECT balance FROM accounts.balances WHERE account_id = $1 FOR UPDATE", fromAccountID).Scan(&fromBalance)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -111,20 +113,17 @@ func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, 
 		return fmt.Errorf("failed to lock from_account: %w", err)
 	}
 
-	if fromBalance < amount {
+	if fromBalance.LessThan(amount) {
 		return fmt.Errorf("insufficient funds")
 	}
 
-	// 2. Deduct from From Account
+	// 2. Deduct from From Account (SQL NUMERIC arithmetic is exact)
 	_, err = tx.ExecContext(ctx, "UPDATE accounts.balances SET balance = balance - $1, version = version + 1, updated_at = NOW() WHERE account_id = $2", amount, fromAccountID)
 	if err != nil {
 		return fmt.Errorf("failed to deduct balance: %w", err)
 	}
 
 	// 3. Add to To Account
-	// Also check if To Account exists first or rely on UPDATE returning 0?
-	// It's safer to check existence or use UPSERT if allowed, but strict rule is exists.
-	// But let's assume it exists as per payment-service validation.
 	res, err := tx.ExecContext(ctx, "UPDATE accounts.balances SET balance = balance + $1, version = version + 1, updated_at = NOW() WHERE account_id = $2", amount, toAccountID)
 	if err != nil {
 		return fmt.Errorf("failed to credit balance: %w", err)
@@ -138,6 +137,7 @@ func (r *PostgresRepository) ProcessPayment(ctx context.Context, fromAccountID, 
 		return fmt.Errorf("to_account not found")
 	}
 
-	slog.InfoContext(ctx, "Successfully processed payment", "from", fromAccountID, "to", toAccountID, "amount", amount)
+	slog.InfoContext(ctx, "Successfully processed payment", "from", fromAccountID, "to", toAccountID, "amount", amount.String())
 	return nil
 }
+
