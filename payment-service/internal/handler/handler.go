@@ -17,25 +17,28 @@ import (
 	"securepay/payment-service/internal/repository"
 	"securepay/payment-service/internal/validator"
 	"securepay/payment-service/models"
+	accountpb "securepay/proto/gen/go/account/v1"
 	pb "securepay/proto/gen/go/payment/v1"
 )
 
 // PaymentHandler implements pb.PaymentServiceServer
 type PaymentHandler struct {
 	pb.UnimplementedPaymentServiceServer
-	repo      repository.Repository
-	validator *validator.Validator
-	producer  *kafka.Producer
-	cache     cache.Cache
+	repo          repository.Repository
+	validator     *validator.Validator
+	producer      *kafka.Producer
+	cache         cache.Cache
+	accountClient accountpb.AccountServiceClient // for balance checks
 }
 
 // NewPaymentHandler creates a new PaymentHandler
-func NewPaymentHandler(repo repository.Repository, val *validator.Validator, producer *kafka.Producer, cache cache.Cache) *PaymentHandler {
+func NewPaymentHandler(repo repository.Repository, val *validator.Validator, producer *kafka.Producer, cache cache.Cache, accountClient accountpb.AccountServiceClient) *PaymentHandler {
 	return &PaymentHandler{
-		repo:      repo,
-		validator: val,
-		producer:  producer,
-		cache:     cache,
+		repo:          repo,
+		validator:     val,
+		producer:      producer,
+		cache:         cache,
+		accountClient: accountClient,
 	}
 }
 
@@ -63,7 +66,37 @@ func (h *PaymentHandler) InitiatePayment(ctx context.Context, req *pb.InitiatePa
 		slog.WarnContext(ctx, "Failed to unmarshal cached response", "error", err)
 	}
 
-	// TODO: Balance Check (via Account Service gRPC)
+	// Balance Check (via Account Service gRPC)
+	if h.accountClient != nil {
+		balanceResp, err := h.accountClient.CheckBalance(ctx, &accountpb.CheckBalanceRequest{
+			AccountId: req.FromAccount,
+		})
+		if err != nil {
+			slog.ErrorContext(ctx, "Failed to check balance", "error", err, "account_id", req.FromAccount)
+			return nil, status.Errorf(codes.Unavailable, "balance check failed: %v", err)
+		}
+
+		balance := decimal.NewFromFloat(balanceResp.Balance)
+		requestedAmount := decimal.NewFromFloat(req.Amount)
+
+		if balance.LessThan(requestedAmount) {
+			slog.WarnContext(ctx, "Insufficient funds",
+				"account_id", req.FromAccount,
+				"balance", balance.String(),
+				"requested", requestedAmount.String(),
+			)
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"insufficient funds: balance %s, requested %s",
+				balance.String(), requestedAmount.String(),
+			)
+		}
+
+		slog.InfoContext(ctx, "Balance check passed",
+			"account_id", req.FromAccount,
+			"balance", balance.String(),
+			"requested", requestedAmount.String(),
+		)
+	}
 
 	// Save to DB
 	if err := h.repo.SavePayment(ctx, req); err != nil {

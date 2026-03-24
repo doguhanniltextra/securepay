@@ -22,7 +22,9 @@ import (
 	"securepay/payment-service/internal/spiffe"
 	"securepay/payment-service/internal/telemetry"
 	"securepay/payment-service/internal/validator"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	accountpb "securepay/proto/gen/go/account/v1"
 	pb "securepay/proto/gen/go/payment/v1"
 )
 
@@ -90,7 +92,21 @@ func main() {
 	defer cancel()
 	resultConsumer.Start(ctx, repo)
 
-	h := handler.NewPaymentHandler(repo, val, producer, redisCache)
+	// Initialize Account Service gRPC client (for balance checks)
+	accountCreds := spiffe.AccountServiceClientCredentials(source)
+	accountConn, err := grpc.DialContext(ctx, cfg.AccountServiceAddr, accountCreds,
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+	)
+	var accountClient accountpb.AccountServiceClient
+	if err != nil {
+		slog.Warn("Failed to connect to Account Service (balance checks disabled)", "error", err)
+	} else {
+		defer accountConn.Close()
+		accountClient = accountpb.NewAccountServiceClient(accountConn)
+		slog.Info("Account Service client initialized", "addr", cfg.AccountServiceAddr)
+	}
+
+	h := handler.NewPaymentHandler(repo, val, producer, redisCache, accountClient)
 
 	// Create gRPC server with mTLS credentials
 	creds := spiffe.PaymentServiceServerCredentials(source)

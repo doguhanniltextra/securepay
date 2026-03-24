@@ -49,3 +49,12 @@ func PaymentServiceServerCredentials(source *workloadapi.X509Source) grpc.Server
 	tlsConfig := tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeAny())
 	return grpc.Creds(credentials.NewTLS(tlsConfig))
 }
+
+// AccountServiceClientCredentials returns gRPC dial option with mTLS credentials
+// for connecting to the Account Service from within payment-service.
+func AccountServiceClientCredentials(source *workloadapi.X509Source) grpc.DialOption {
+	accountServiceID := spiffeid.RequireFromString("spiffe://securepay.dev/account-service")
+	tlsConfig := tlsconfig.MTLSClientConfig(source, source, tlsconfig.AuthorizeID(accountServiceID))
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+}
+
