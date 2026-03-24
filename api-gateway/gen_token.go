@@ -1,12 +1,4 @@
+// Deprecated: This file is intentionally left empty.
+// Use cmd/token/main.go instead to generate JWT tokens.
+// TODO: Delete this file entirely (rm api-gateway/gen_token.go)
 package main
-
-import (
-	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-)
-
-func main() {
-	token := jwt.New(jwt.SigningMethodHS256)
-	s, _ := token.SignedString([]byte("securepay-secret-key"))
-	fmt.Println(s)
-}
